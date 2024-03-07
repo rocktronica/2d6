@@ -1,6 +1,7 @@
 #include <Arduboy2.h>
 #include <ArduboyTones.h>
 #include <Tinyfont.h>
+#include "display.h"
 
 Arduboy2 arduboy;
 ArduboyTones sound(arduboy.audio.enabled);
@@ -14,29 +15,6 @@ void update() {
   currentRollValues[1] = random(0, 6 + 1);
 
   pastRollValues[getSum(currentRollValues) - 2] += 1;
-}
-
-uint8_t getSum(uint8_t values[2]) {
-  return values[0] + values[1];
-}
-
-String getRollText(uint8_t values[2]) {
-  return String(
-    values[0]) + "+" + String(values[1]) +
-    "=" + String(getSum(values)
-  );
-}
-
-// TODO: arg types?
-// TODO: smaller, fix overlap when 3+ digits
-void printRolls(int x, int y) {
-  for (uint8_t i = 0; i < 11; i++) {
-    tinyfont.setCursor(x + i * 11, y);
-    tinyfont.print(String(i + 2));
-
-    tinyfont.setCursor(x + i * 11, y + 5);
-    tinyfont.print(String(pastRollValues[i]));
-  }
 }
 
 void setup() {
@@ -67,7 +45,7 @@ void loop() {
   tinyfont.setCursor(1, 1);
   tinyfont.print("NOW:" + getRollText(currentRollValues));
 
-  printRolls(1, 10);
+  printRolls(1, 10, pastRollValues, tinyfont);
 
   arduboy.display();
 }
