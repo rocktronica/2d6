@@ -6,8 +6,8 @@ uint8_t getSum(uint8_t values[2]) {
 }
 
 // TODO: more idiomatic?
-uint8_t getMaxSumCount(int sumCounts[11]) {
-  uint8_t maxSum = 0;
+int getMaxSumCount(int sumCounts[11]) {
+  int maxSum = 0;
 
   for (uint8_t i = 0; i < 11; i++) {
     maxSum = max(maxSum, sumCounts[i]);
