@@ -23,7 +23,7 @@ int rollsCount = 0;
 void update(int count = 1) {
   while (count > 0) {
     for (uint8_t i = 0; i < DICE_PER_ROLL; i++) {
-      currentRollValues[i] = random(0, SIDES_PER_DIE + 1);
+      currentRollValues[i] = random(1, SIDES_PER_DIE + 1);
     }
     sumCounts[getSum(currentRollValues, DICE_PER_ROLL) - MIN_SUM] += 1;
 
