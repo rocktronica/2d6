@@ -9,7 +9,7 @@
 const uint8_t MIN_SUM = DICE_PER_ROLL * 1;
 const uint8_t MAX_SUM = DICE_PER_ROLL * SIDES_PER_DIE;
 const uint8_t UNIQUE_SUMS_COUNT = MAX_SUM - MIN_SUM + 1;
-const uint8_t GRAPH_MAX_WIDTH = WIDTH - 40;
+const uint8_t GRAPH_MAX_WIDTH = WIDTH - SIDEBAR_MIN_WIDTH;
 
 Arduboy2 arduboy;
 ArduboyTones sound(arduboy.audio.enabled);
@@ -76,16 +76,17 @@ void loop() {
     update(arduboy.pressed(UP_BUTTON) ? 100 : 1);
   }
 
-  tinyfont.setCursor(0, 5 * 0);
-  tinyfont.print(getRollText(currentRollValues, DICE_PER_ROLL));
-
-  tinyfont.setCursor(0, 5 * 2);
-  tinyfont.print("ROLLS:\n" + String(rollsCount));
-
-  tinyfont.setCursor(0, 5 * 4);
-  tinyfont.print("AVG:\n" + String(float(totalSum) / rollsCount));
-
   const uint8_t graphWidth = getIdealGraphWidth(GRAPH_MAX_WIDTH, UNIQUE_SUMS_COUNT);
+  const uint8_t sidebarWidth = WIDTH - graphWidth - FRAME_GAP;
+
+  drawSidebar(
+    0, 0,
+    getRollText(currentRollValues, DICE_PER_ROLL)
+      + "\n\nAVG:\n" + (rollsCount > 0 ? String(float(totalSum) / rollsCount) : "...")
+      + "\n\nROLLS:\n" + String(rollsCount),
+    sidebarWidth, HEIGHT,
+    arduboy, tinyfont
+  );
 
   drawGraph(
     WIDTH - graphWidth, 0,

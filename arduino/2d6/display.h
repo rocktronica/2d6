@@ -1,11 +1,14 @@
 #ifndef graph_h
 #define graph_h
 
-# define OUTER_FILLET 3
-# define INNER_FILLET 1
+# define SIDEBAR_MIN_WIDTH  40
 
-# define GRAPH_FRAME  1
-# define GRAPH_GAP    1
+# define OUTER_FILLET       3
+# define INNER_FILLET       1
+
+# define FRAME              1
+# define FRAME_GAP          2
+# define GAP                1
 
 uint8_t getSum(uint8_t values[], uint8_t size) {
   int sum = 0;
@@ -37,24 +40,26 @@ String getRollText(uint8_t values[], uint8_t size) {
   return equation + "=" + String(getSum(values, size));
 }
 
-// TODO: arg types?
-// TODO: smaller, fix overlap when 3+ digits
-// TODO: use size
-void printRolls(int x, int y, int sumCounts[11], Tinyfont tinyfont) {
-  for (uint8_t i = 0; i < 11; i++) {
-    tinyfont.setCursor(x + i * 11, y);
-    tinyfont.print(String(i + 2));
+void drawSidebar(
+  uint8_t x,
+  uint8_t y,
+  String text,
+  uint8_t width,
+  uint8_t height,
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
-    tinyfont.setCursor(x + i * 11, y + 5);
-    tinyfont.print(String(sumCounts[i]));
-  }
+  tinyfont.setCursor(x + FRAME + FRAME_GAP, x + FRAME + FRAME_GAP);
+  tinyfont.print(text);
 }
 
 uint8_t getIdealGraphBarWidth(
   uint8_t maxWidth,
   uint8_t barsCount
 ) {
-  return (maxWidth - (GRAPH_GAP + GRAPH_FRAME) * 2 - GRAPH_GAP * (barsCount - 1)) / barsCount;
+  return (maxWidth - (FRAME_GAP + FRAME) * 2 - GAP * (barsCount - 1)) / barsCount;
 }
 
 uint8_t getIdealGraphWidth(
@@ -62,12 +67,12 @@ uint8_t getIdealGraphWidth(
   uint8_t barsCount
 ) {
   return getIdealGraphBarWidth(maxWidth, barsCount) * barsCount
-    + (GRAPH_GAP + GRAPH_FRAME) * 2 + GRAPH_GAP * (barsCount - 1);
+    + (FRAME_GAP + FRAME) * 2 + GAP * (barsCount - 1);
 }
 
 void drawGraph(
-  int x,
-  int y,
+  uint8_t x,
+  uint8_t y,
 
   int sumCounts[],
   uint8_t minSum,
@@ -85,12 +90,12 @@ void drawGraph(
   int sumCount = getMaxValue(sumCounts, barsCount);
 
   for (uint8_t i = 0; i < barsCount; i++) {
-    uint8_t barHeight = (float(sumCounts[i]) / sumCount) * (height - (GRAPH_GAP + GRAPH_FRAME) * 2);
+    uint8_t barHeight = (float(sumCounts[i]) / sumCount) * (height - (FRAME_GAP + FRAME) * 2);
 
     if (barHeight > 0) {
       arduboy.fillRoundRect(
-        x + (GRAPH_GAP + GRAPH_FRAME) + i * (barWidth + GRAPH_GAP),
-        y + height - barHeight - (GRAPH_GAP + GRAPH_FRAME),
+        x + (FRAME_GAP + FRAME) + i * (barWidth + GAP),
+        y + height - barHeight - (FRAME_GAP + FRAME),
         barWidth,
         barHeight,
         INNER_FILLET
