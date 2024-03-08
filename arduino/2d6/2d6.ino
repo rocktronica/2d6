@@ -15,16 +15,20 @@ Arduboy2 arduboy;
 ArduboyTones sound(arduboy.audio.enabled);
 Tinyfont tinyfont = Tinyfont(arduboy.sBuffer, WIDTH, HEIGHT);
 
+// TODO: prevent/error on overflow
 uint8_t currentRollValues[DICE_PER_ROLL];
 int sumCounts[UNIQUE_SUMS_COUNT];
 int rollsCount = 0;
+uint32_t totalSum = 0;
 
 void update(int count = 1) {
   while (count > 0) {
     for (uint8_t i = 0; i < DICE_PER_ROLL; i++) {
       currentRollValues[i] = random(1, SIDES_PER_DIE + 1);
     }
+
     sumCounts[getSum(currentRollValues, DICE_PER_ROLL) - MIN_SUM] += 1;
+    totalSum += getSum(currentRollValues, DICE_PER_ROLL);
 
     count -= 1;
     rollsCount += 1;
@@ -40,6 +44,7 @@ void reset() {
   }
 
   rollsCount = 0;
+  totalSum = 0;
 }
 
 void setup() {
@@ -71,14 +76,14 @@ void loop() {
     update(arduboy.pressed(UP_BUTTON) ? 100 : 1);
   }
 
-  tinyfont.setCursor(0, 6 * 0);
+  tinyfont.setCursor(0, 5 * 0);
   tinyfont.print(getRollText(currentRollValues, DICE_PER_ROLL));
 
   tinyfont.setCursor(0, 5 * 2);
-  tinyfont.print("MAX:\n" + String(getMaxSumCount(sumCounts, UNIQUE_SUMS_COUNT)));
+  tinyfont.print("ROLLS:\n" + String(rollsCount));
 
   tinyfont.setCursor(0, 5 * 4);
-  tinyfont.print("ROLLS:\n" + String(rollsCount));
+  tinyfont.print("AVG:\n" + String(float(totalSum) / rollsCount));
 
   drawGraph(
     WIDTH - UNIQUE_SUMS_COUNT * GRAPH_BAR_WIDTH, 0,
