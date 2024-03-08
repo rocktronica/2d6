@@ -1,6 +1,12 @@
 #ifndef graph_h
 #define graph_h
 
+# define OUTER_FILLET 3
+# define INNER_FILLET 1
+
+# define GRAPH_FRAME  1
+# define GRAPH_GAP    1
+
 uint8_t getSum(uint8_t values[], uint8_t size) {
   int sum = 0;
 
@@ -44,6 +50,21 @@ void printRolls(int x, int y, int sumCounts[11], Tinyfont tinyfont) {
   }
 }
 
+uint8_t getIdealGraphBarWidth(
+  uint8_t maxWidth,
+  uint8_t barsCount
+) {
+  return (maxWidth - (GRAPH_GAP + GRAPH_FRAME) * 2 - GRAPH_GAP * (barsCount - 1)) / barsCount;
+}
+
+uint8_t getIdealGraphWidth(
+  uint8_t maxWidth,
+  uint8_t barsCount
+) {
+  return getIdealGraphBarWidth(maxWidth, barsCount) * barsCount
+    + (GRAPH_GAP + GRAPH_FRAME) * 2 + GRAPH_GAP * (barsCount - 1);
+}
+
 void drawGraph(
   int x,
   int y,
@@ -51,41 +72,29 @@ void drawGraph(
   int sumCounts[],
   uint8_t minSum,
   uint8_t maxSum,
-  uint8_t size,
+  uint8_t barsCount,
 
   Arduboy2 arduboy,
-  Tinyfont tinyfont,
 
   uint8_t width = 60,
-  uint8_t height = 40,
-
-  bool showFrame = false,
-  bool showLegend = false
+  uint8_t height = 40
 ) {
-  if (showFrame) {
-    arduboy.drawRect(x, y, width, height);
-  }
+  arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
-  uint8_t barWidth = width / size;
-  int sumCount = getMaxValue(sumCounts, size);
+  uint8_t barWidth = getIdealGraphBarWidth(width, barsCount);
+  int sumCount = getMaxValue(sumCounts, barsCount);
 
-  for (uint8_t i = 0; i < size; i++) {
-    uint8_t barHeight = (float(sumCounts[i]) / sumCount) * height;
+  for (uint8_t i = 0; i < barsCount; i++) {
+    uint8_t barHeight = (float(sumCounts[i]) / sumCount) * (height - (GRAPH_GAP + GRAPH_FRAME) * 2);
 
     if (barHeight > 0) {
-      arduboy.fillRect(
-        x + i * barWidth,
-        y + (height - barHeight),
+      arduboy.fillRoundRect(
+        x + (GRAPH_GAP + GRAPH_FRAME) + i * (barWidth + GRAPH_GAP),
+        y + height - barHeight - (GRAPH_GAP + GRAPH_FRAME),
         barWidth,
         barHeight,
-        1
+        INNER_FILLET
       );
-
-      if (showLegend) {
-        tinyfont.setCursor(x + i * barWidth, y + height - 5);
-        tinyfont.setTextColor(BLACK);
-        tinyfont.print(i + minSum);
-      }
     }
   }
 }

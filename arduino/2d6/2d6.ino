@@ -9,7 +9,7 @@
 const uint8_t MIN_SUM = DICE_PER_ROLL * 1;
 const uint8_t MAX_SUM = DICE_PER_ROLL * SIDES_PER_DIE;
 const uint8_t UNIQUE_SUMS_COUNT = MAX_SUM - MIN_SUM + 1;
-const uint8_t GRAPH_BAR_WIDTH = floor((WIDTH - 40) / UNIQUE_SUMS_COUNT);
+const uint8_t GRAPH_MAX_WIDTH = WIDTH - 40;
 
 Arduboy2 arduboy;
 ArduboyTones sound(arduboy.audio.enabled);
@@ -85,11 +85,13 @@ void loop() {
   tinyfont.setCursor(0, 5 * 4);
   tinyfont.print("AVG:\n" + String(float(totalSum) / rollsCount));
 
+  const uint8_t graphWidth = getIdealGraphWidth(GRAPH_MAX_WIDTH, UNIQUE_SUMS_COUNT);
+
   drawGraph(
-    WIDTH - UNIQUE_SUMS_COUNT * GRAPH_BAR_WIDTH, 0,
+    WIDTH - graphWidth, 0,
     sumCounts, MIN_SUM, MAX_SUM, UNIQUE_SUMS_COUNT,
-    arduboy, tinyfont,
-    UNIQUE_SUMS_COUNT * GRAPH_BAR_WIDTH, HEIGHT
+    arduboy,
+    graphWidth, HEIGHT
   );
 
   arduboy.display();
