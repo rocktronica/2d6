@@ -11,15 +11,14 @@ uint8_t getSum(uint8_t values[], uint8_t size) {
   return sum;
 }
 
-// TODO: more idiomatic?
-int getMaxSumCount(int sumCounts[], uint8_t size) {
-  int maxSum = 0;
+int getMaxValue(int values[], uint8_t size) {
+  int maxValue = 0;
 
   for (uint8_t i = 0; i < size; i++) {
-    maxSum = max(maxSum, sumCounts[i]);
+    maxValue = max(maxValue, values[i]);
   }
 
-  return maxSum;
+  return maxValue;
 }
 
 String getRollText(uint8_t values[], uint8_t size) {
@@ -68,7 +67,7 @@ void drawGraph(
   }
 
   uint8_t barWidth = width / size;
-  int sumCount = getMaxSumCount(sumCounts, size);
+  int sumCount = getMaxValue(sumCounts, size);
 
   for (uint8_t i = 0; i < size; i++) {
     uint8_t barHeight = (float(sumCounts[i]) / sumCount) * height;
