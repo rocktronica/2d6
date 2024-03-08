@@ -59,8 +59,8 @@ void drawGraph(
   uint8_t width = 60,
   uint8_t height = 40,
 
-  bool showFrame = true,
-  bool showLegend = true
+  bool showFrame = false,
+  bool showLegend = false
 ) {
   if (showFrame) {
     arduboy.drawRect(x, y, width, height);
