@@ -3,7 +3,6 @@
 #include <Tinyfont.h>
 #include "display.h"
 
-# define ATTEMPTS_PER_UPDATE 10
 # define DICE_PER_ROLL      2
 # define SIDES_PER_DIE      6
 
@@ -32,18 +31,24 @@ void update(int count = 1) {
   }
 }
 
-void setup() {
-  arduboy.beginDoFirst();
-  arduboy.waitNoButtons();
-
-  arduboy.setFrameRate(15);
-
+void reset() {
   for (uint8_t i = 0; i < DICE_PER_ROLL; i++) {
     currentRollValues[i] = 0;
   }
   for (uint8_t i = 0; i < UNIQUE_SUMS_COUNT; i++) {
     sumCounts[i] = 0;
   }
+
+  rollsCount = 0;
+}
+
+void setup() {
+  arduboy.beginDoFirst();
+  arduboy.waitNoButtons();
+
+  arduboy.setFrameRate(15);
+
+  reset();
 }
 
 void loop() {
@@ -55,11 +60,15 @@ void loop() {
   arduboy.clear();
 
   if (arduboy.pressed(A_BUTTON)) {
-    arduboy.initRandomSeed();
+    reset();
   }
 
-  if (arduboy.pressed(A_BUTTON) || arduboy.pressed(B_BUTTON)) {
-    update(ATTEMPTS_PER_UPDATE);
+  if (arduboy.pressed(B_BUTTON)) {
+    if (rollsCount == 0) {
+        arduboy.initRandomSeed();
+    }
+
+    update(arduboy.pressed(UP_BUTTON) ? 100 : 1);
   }
 
   tinyfont.setCursor(0, 6 * 0);
