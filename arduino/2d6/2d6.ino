@@ -81,8 +81,7 @@ void loop() {
 
   drawSidebar(
     0, 0,
-    currentRollValues,
-    DICE_PER_ROLL,
+    currentRollValues, DICE_PER_ROLL, SIDES_PER_DIE,
       "AVG:\n" + (rollsCount > 0 ? String(float(totalSum) / rollsCount) : "?")
       + "\n\nROLLS:\n" + String(rollsCount),
     sidebarWidth, HEIGHT,

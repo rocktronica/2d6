@@ -10,9 +10,10 @@
 # define FRAME_GAP          2
 # define GAP                1
 
-# define DIE_SIZE           11
-# define DIE_CHAR_WIDTH     5
-# define DIE_CHAR_HEIGHT    7
+# define DIE_SIZE           13
+# define DIE_CHAR_WIDTH     5    // Default Arduboy font
+# define DIE_CHAR_HEIGHT    7    // Default Arduboy font
+# define DIE_CHAR_SMALL     4    // TinyFont 4x4
 
 uint8_t getSum(uint8_t values[], uint8_t size) {
   int sum = 0;
@@ -39,17 +40,27 @@ void drawDie(
   uint8_t y,
 
   uint8_t value,
+  uint8_t maxValue,
 
   Arduboy2 arduboy,
+  Tinyfont tinyfont,
 
   uint8_t width = DIE_SIZE,
   uint8_t height = DIE_SIZE
 ) {
-  arduboy.setCursor(
-    x + (float(width) - DIE_CHAR_WIDTH) / 2,
-    y + (float(height) - DIE_CHAR_HEIGHT) / 2
-  );
-  arduboy.print((value > 0) ? String(value) : "?");
+  if (maxValue < 10) {
+    arduboy.setCursor(
+      x + (float(width) - DIE_CHAR_WIDTH) / 2,
+      y + (float(height) - DIE_CHAR_HEIGHT) / 2
+    );
+    arduboy.print((value > 0) ? String(value) : "?");
+  } else {
+    tinyfont.setCursor(
+      x + (float(width) - (value < 10 ? DIE_CHAR_SMALL : DIE_CHAR_SMALL * 2 + 1)) / 2,
+      y + (float(height) - DIE_CHAR_SMALL) / 2
+    );
+    tinyfont.print((value > 0) ? String(value) : "?");
+  }
 
   // Intentionally draw container after text to ensure visibility
   arduboy.drawRoundRect(x, y, width, height, INNER_FILLET);
@@ -61,6 +72,7 @@ void drawSidebar(
 
   uint8_t values[],
   uint8_t valuesCount,
+  uint8_t maxValue,
   String text,
 
   uint8_t width,
@@ -85,8 +97,8 @@ void drawSidebar(
     drawDie(
       x + FRAME + FRAME_GAP + xOffset + (i % diceColumns) * (DIE_SIZE + GAP),
       y + FRAME + FRAME_GAP + floor(i / diceColumns) * (DIE_SIZE + GAP),
-      values[i],
-      arduboy
+      values[i], maxValue,
+      arduboy, tinyfont
     );
   }
 
