@@ -10,6 +10,10 @@
 # define FRAME_GAP          2
 # define GAP                1
 
+# define DIE_SIZE           11
+# define DIE_CHAR_WIDTH     5
+# define DIE_CHAR_HEIGHT    7
+
 uint8_t getSum(uint8_t values[], uint8_t size) {
   int sum = 0;
 
@@ -30,28 +34,72 @@ int getMaxValue(int values[], uint8_t size) {
   return maxValue;
 }
 
-String getRollText(uint8_t values[], uint8_t size) {
-  String equation = String(values[0]);
+void drawDie(
+  uint8_t x,
+  uint8_t y,
 
-  for (uint8_t i = 1; i < size; i++) {
-    equation += "+" + String(values[i]);
-  }
+  uint8_t value,
 
-  return equation + "=" + String(getSum(values, size));
+  Arduboy2 arduboy,
+
+  uint8_t width = DIE_SIZE,
+  uint8_t height = DIE_SIZE
+) {
+  arduboy.setCursor(
+    x + (float(width) - DIE_CHAR_WIDTH) / 2,
+    y + (float(height) - DIE_CHAR_HEIGHT) / 2
+  );
+  arduboy.print((value > 0) ? String(value) : "?");
+
+  // Intentionally draw container after text to ensure visibility
+  arduboy.drawRoundRect(x, y, width, height, INNER_FILLET);
 }
 
 void drawSidebar(
   uint8_t x,
   uint8_t y,
+
+  uint8_t values[],
+  uint8_t valuesCount,
   String text,
+
   uint8_t width,
   uint8_t height,
+
   Arduboy2 arduboy,
   Tinyfont tinyfont
 ) {
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
-  tinyfont.setCursor(x + FRAME + FRAME_GAP, x + FRAME + FRAME_GAP);
+  const uint8_t diceColumns =
+    floor((width - (FRAME_GAP + FRAME) * 2) / DIE_SIZE);
+  const uint8_t diceRows = ceil(float(valuesCount) / diceColumns);
+
+  const uint8_t xOffset = (
+    (width - (FRAME_GAP + FRAME) * 2)
+      - DIE_SIZE * min(valuesCount, diceColumns)
+      - GAP * (diceColumns - 1)
+    ) / 2;
+
+  for (uint8_t i = 0; i < valuesCount; i++) {
+    drawDie(
+      x + FRAME + FRAME_GAP + xOffset + (i % diceColumns) * (DIE_SIZE + GAP),
+      y + FRAME + FRAME_GAP + floor(i / diceColumns) * (DIE_SIZE + GAP),
+      values[i],
+      arduboy
+    );
+  }
+
+  const uint8_t lineY = y + FRAME + FRAME_GAP
+      + DIE_SIZE * diceRows + GAP * (diceRows - 1)
+      + FRAME_GAP;
+
+  arduboy.drawFastHLine(x, lineY, width);
+
+  tinyfont.setCursor(
+    x + FRAME + FRAME_GAP,
+    lineY + FRAME + FRAME_GAP
+  );
   tinyfont.print(text);
 }
 

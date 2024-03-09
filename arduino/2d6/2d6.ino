@@ -81,8 +81,9 @@ void loop() {
 
   drawSidebar(
     0, 0,
-    getRollText(currentRollValues, DICE_PER_ROLL)
-      + "\n\nAVG:\n" + (rollsCount > 0 ? String(float(totalSum) / rollsCount) : "...")
+    currentRollValues,
+    DICE_PER_ROLL,
+      "AVG:\n" + (rollsCount > 0 ? String(float(totalSum) / rollsCount) : "?")
       + "\n\nROLLS:\n" + String(rollsCount),
     sidebarWidth, HEIGHT,
     arduboy, tinyfont
