@@ -76,7 +76,7 @@ void loop() {
         arduboy.initRandomSeed();
     }
 
-    update(arduboy.pressed(UP_BUTTON) ? 100 : 1);
+    update(arduboy.pressed(UP_BUTTON) ? 10 : 1);
     animationFramesRemaining = ANIMATION_FRAMES;
   }
 
