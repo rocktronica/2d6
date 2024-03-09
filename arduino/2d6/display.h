@@ -98,7 +98,7 @@ void drawGraph(
         y + height - barHeight - (FRAME_GAP + FRAME),
         barWidth,
         barHeight,
-        INNER_FILLET
+        barHeight > INNER_FILLET ? INNER_FILLET : 0
       );
     }
   }
