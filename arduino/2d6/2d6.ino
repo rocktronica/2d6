@@ -76,6 +76,7 @@ void loop() {
     update(arduboy.pressed(UP_BUTTON) ? 100 : 1);
   }
 
+  // TODO: fix arbitrarily. fluid width isn't worth baggage
   const uint8_t graphWidth = getIdealGraphWidth(GRAPH_MAX_WIDTH, UNIQUE_SUMS_COUNT);
   const uint8_t sidebarWidth = WIDTH - graphWidth - FRAME_GAP;
 

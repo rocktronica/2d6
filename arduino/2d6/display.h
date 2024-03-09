@@ -156,9 +156,11 @@ void drawGraph(
       arduboy.fillRoundRect(
         x + (FRAME_GAP + FRAME) + i * (barWidth + GAP),
         y + height - barHeight - (FRAME_GAP + FRAME),
-        barWidth,
+        max(1, barWidth),
         barHeight,
-        barHeight > INNER_FILLET ? INNER_FILLET : 0
+        barWidth > INNER_FILLET * 2
+          ? (barHeight > INNER_FILLET * 2 ? INNER_FILLET : 0)
+          : 0
       );
     }
   }
