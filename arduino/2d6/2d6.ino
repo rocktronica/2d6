@@ -5,6 +5,7 @@
 
 # define DICE_PER_ROLL      2
 # define SIDES_PER_DIE      6
+# define ANIMATION_FRAMES   5
 
 const uint8_t MIN_SUM = DICE_PER_ROLL * 1;
 const uint8_t MAX_SUM = DICE_PER_ROLL * SIDES_PER_DIE;
@@ -20,6 +21,8 @@ uint8_t currentRollValues[DICE_PER_ROLL];
 int sumCounts[UNIQUE_SUMS_COUNT];
 int rollsCount = 0;
 uint32_t totalSum = 0;
+
+uint8_t animationFramesRemaining = 0;
 
 void update(int count = 1) {
   while (count > 0) {
@@ -74,17 +77,20 @@ void loop() {
     }
 
     update(arduboy.pressed(UP_BUTTON) ? 100 : 1);
+    animationFramesRemaining = ANIMATION_FRAMES;
   }
 
   // TODO: fix arbitrarily. fluid width isn't worth baggage
   const uint8_t graphWidth = getIdealGraphWidth(GRAPH_MAX_WIDTH, UNIQUE_SUMS_COUNT);
   const uint8_t sidebarWidth = WIDTH - graphWidth - FRAME_GAP;
 
+  animationFramesRemaining = max(0, animationFramesRemaining - 1);
   drawSidebar(
     0, 0,
     currentRollValues, DICE_PER_ROLL, SIDES_PER_DIE,
       "AVG:\n" + (rollsCount > 0 ? String(float(totalSum) / rollsCount) : "?")
       + "\n\nROLLS:\n" + String(rollsCount),
+    animationFramesRemaining > 0,
     sidebarWidth, HEIGHT,
     arduboy, tinyfont
   );

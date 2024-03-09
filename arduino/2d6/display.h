@@ -42,24 +42,30 @@ void drawDie(
   uint8_t value,
   uint8_t maxValue,
 
+  bool inFlux,
+
   Arduboy2 arduboy,
   Tinyfont tinyfont,
 
   uint8_t width = DIE_SIZE,
   uint8_t height = DIE_SIZE
 ) {
+  String displayValue = inFlux
+    ? String(random(1, maxValue + 1))
+    : (value > 0) ? String(value) : "?";
+
   if (maxValue < 10) {
     arduboy.setCursor(
       x + (float(width) - DIE_CHAR_WIDTH) / 2,
       y + (float(height) - DIE_CHAR_HEIGHT) / 2
     );
-    arduboy.print((value > 0) ? String(value) : "?");
+    arduboy.print(displayValue);
   } else {
     tinyfont.setCursor(
       x + (float(width) - (value < 10 ? DIE_CHAR_SMALL : DIE_CHAR_SMALL * 2 + 1)) / 2,
       y + (float(height) - DIE_CHAR_SMALL) / 2
     );
-    tinyfont.print((value > 0) ? String(value) : "?");
+    tinyfont.print(displayValue);
   }
 
   // Intentionally draw container after text to ensure visibility
@@ -74,6 +80,8 @@ void drawSidebar(
   uint8_t valuesCount,
   uint8_t maxValue,
   String text,
+
+  bool inFlux,
 
   uint8_t width,
   uint8_t height,
@@ -98,6 +106,7 @@ void drawSidebar(
       x + FRAME + FRAME_GAP + xOffset + (i % diceColumns) * (DIE_SIZE + GAP),
       y + FRAME + FRAME_GAP + floor(i / diceColumns) * (DIE_SIZE + GAP),
       values[i], maxValue,
+      inFlux,
       arduboy, tinyfont
     );
   }
