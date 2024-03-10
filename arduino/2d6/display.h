@@ -16,6 +16,13 @@
 # define DIE_CHAR_HEIGHT    7    // Default Arduboy font
 # define DIE_CHAR_SMALL     4    // TinyFont 4x4
 
+# define ANIMATION_FRAMES   5
+
+enum GameState {
+  Title,
+  Operation
+};
+
 uint8_t getSum(uint8_t values[], uint8_t size) {
   int sum = 0;
 
@@ -36,27 +43,25 @@ int getMaxValue(int values[], uint8_t size) {
   return maxValue;
 }
 
-// TODO: menu
-
 // TODO: BIG version for tabletop play
 void drawDie(
   uint8_t x,
   uint8_t y,
 
-  uint8_t value,
-  uint8_t maxValue,
-
-  bool inFlux,
+  String value,
 
   Arduboy2 arduboy,
   Tinyfont tinyfont,
+
+  bool inFlux = false,
+  uint8_t maxValue = 9,
 
   uint8_t width = DIE_SIZE,
   uint8_t height = DIE_SIZE
 ) {
   String displayValue = inFlux
     ? String(random(1, maxValue + 1))
-    : (value > 0) ? String(value) : "?";
+    : value != "0" ? value : "?";
 
   if (maxValue < 10) {
     arduboy.setCursor(
@@ -66,7 +71,8 @@ void drawDie(
     arduboy.print(displayValue);
   } else {
     tinyfont.setCursor(
-      x + (float(width) - (value < 10 ? DIE_CHAR_SMALL : DIE_CHAR_SMALL * 2 + 1)) / 2,
+      x + (float(width)
+        - (value.length() < 2 ? DIE_CHAR_SMALL : DIE_CHAR_SMALL * 2 + 1)) / 2,
       y + (float(height) - DIE_CHAR_SMALL) / 2
     );
     tinyfont.print(displayValue);
@@ -74,6 +80,24 @@ void drawDie(
 
   // Intentionally draw container after text to ensure visibility
   arduboy.drawRoundRect(x, y, width, height, INNER_FILLET);
+}
+
+// TODO: drawMenu
+void drawTitle(
+  uint8_t dicePerRoll,
+  uint8_t sidesPerDie,
+
+  bool inFlux,
+
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  const uint8_t xOffset = (WIDTH - (DIE_SIZE * 3 + GAP * 2)) / 2;
+  const uint8_t y = (HEIGHT - DIE_SIZE) / 2;
+
+  drawDie(xOffset + (DIE_SIZE + GAP) * 0, y, String(dicePerRoll), arduboy, tinyfont, inFlux);
+  drawDie(xOffset + (DIE_SIZE + GAP) * 1, y, "d", arduboy, tinyfont, inFlux);
+  drawDie(xOffset + (DIE_SIZE + GAP) * 2, y, String(sidesPerDie), arduboy, tinyfont, inFlux);
 }
 
 void drawSidebar(
@@ -109,9 +133,9 @@ void drawSidebar(
     drawDie(
       x + FRAME + FRAME_GAP + xOffset + (i % diceColumns) * (DIE_SIZE + GAP),
       y + FRAME + FRAME_GAP + floor(i / diceColumns) * (DIE_SIZE + GAP),
-      values[i], maxValue,
-      inFlux,
-      arduboy, tinyfont
+      String(values[i]),
+      arduboy, tinyfont,
+      inFlux, maxValue
     );
   }
 
