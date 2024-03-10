@@ -1,7 +1,8 @@
 #ifndef graph_h
 #define graph_h
 
-# define SIDEBAR_MIN_WIDTH  40
+# define SIDEBAR_WIDTH      45
+# define GRAPH_WIDTH        (WIDTH - SIDEBAR_WIDTH - FRAME_GAP)
 
 # define OUTER_FILLET       3
 # define INNER_FILLET       1
@@ -35,6 +36,9 @@ int getMaxValue(int values[], uint8_t size) {
   return maxValue;
 }
 
+// TODO: menu
+
+// TODO: BIG version for tabletop play
 void drawDie(
   uint8_t x,
   uint8_t y,
@@ -83,11 +87,11 @@ void drawSidebar(
 
   bool inFlux,
 
-  uint8_t width,
-  uint8_t height,
-
   Arduboy2 arduboy,
-  Tinyfont tinyfont
+  Tinyfont tinyfont,
+
+  uint8_t width = SIDEBAR_WIDTH,
+  uint8_t height = HEIGHT
 ) {
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
@@ -150,20 +154,22 @@ void drawGraph(
 
   Arduboy2 arduboy,
 
-  uint8_t width = 60,
-  uint8_t height = 40
+  uint8_t width = GRAPH_WIDTH,
+  uint8_t height = HEIGHT
 ) {
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
   uint8_t barWidth = getIdealGraphBarWidth(width, barsCount);
   int sumCount = getMaxValue(sumCounts, barsCount);
 
+  const uint8_t xOffset = (width - getIdealGraphWidth(width, barsCount)) / 2;
+
   for (uint8_t i = 0; i < barsCount; i++) {
     uint8_t barHeight = (float(sumCounts[i]) / sumCount) * (height - (FRAME_GAP + FRAME) * 2);
 
     if (barHeight > 0) {
       arduboy.fillRoundRect(
-        x + (FRAME_GAP + FRAME) + i * (barWidth + GAP),
+        x + xOffset + (FRAME_GAP + FRAME) + i * (barWidth + GAP),
         y + height - barHeight - (FRAME_GAP + FRAME),
         max(1, barWidth),
         barHeight,
