@@ -16,11 +16,27 @@
 # define DIE_CHAR_HEIGHT    7    // Default Arduboy font
 # define DIE_CHAR_SMALL     4    // TinyFont 4x4
 
-# define ANIMATION_FRAMES   5
+# define CARET_FRAMES       3
+# define ROLL_FRAMES        5
+# define UPDATE_FRAMES      2
+
+# define CARET_SIZE         6
 
 enum GameState {
   Title,
   Operation
+};
+
+enum Direction {
+  None,
+  Up,
+  Down
+};
+
+enum MenuDie {
+  DicePerRoll = 0,
+  Dee,
+  SidesPerDie
 };
 
 uint8_t getSum(uint8_t values[], uint8_t size) {
@@ -55,7 +71,9 @@ void drawDie(
 
   uint8_t size = DIE_SIZE,
   bool useTinyFont = false,
-  uint8_t fillet = INNER_FILLET
+  uint8_t fillet = INNER_FILLET,
+
+  bool accent = false
 ) {
   uint8_t textWidth = value.length() * DIE_CHAR_WIDTH
     + (value.length() - 1);
@@ -77,35 +95,90 @@ void drawDie(
 
   // Intentionally draw container after text to ensure visibility
   arduboy.drawRoundRect(x, y, size, size, fillet);
-}
 
-// TODO: drawMenu
-void drawTitle(
-  uint8_t dicePerRoll,
-  uint8_t sidesPerDie,
-
-  bool inFlux,
-
-  Arduboy2 arduboy,
-  Tinyfont tinyfont,
-
-  uint8_t size = DIE_CHAR_WIDTH * 2 + 8 // a little arbitrary
-) {
-  const uint8_t xOffset = (WIDTH - (size * 3 + GAP * 2)) / 2;
-  const uint8_t y = (HEIGHT - size) / 2;
-
-  String dieValues[3] = { String(dicePerRoll), "d", String(sidesPerDie) };
-
-  for (uint8_t i = 0; i < 3; i++) {
-    drawDie(
-      xOffset + (size + GAP) * i, y,
-      dieValues[i],
-      arduboy, tinyfont,
-      size, false, OUTER_FILLET
+  if (accent) {
+    arduboy.drawRoundRect(
+      x + FRAME,
+      y + FRAME,
+      size - FRAME * 2,
+      size - FRAME * 2,
+      max(0, fillet - FRAME)
     );
   }
 }
 
+void drawCaret(
+  uint8_t x,
+  uint8_t y,
+
+  Direction direction,
+  bool fill,
+
+  Arduboy2 arduboy
+) {
+  if (fill) {
+    arduboy.fillTriangle(
+      x, y,
+      x + CARET_SIZE, y,
+      x + CARET_SIZE / 2,
+        y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
+    );
+  } else {
+    arduboy.drawTriangle(
+      x, y,
+      x + CARET_SIZE, y,
+      x + CARET_SIZE / 2,
+        y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
+    );
+  }
+}
+
+void drawMenu(
+  uint8_t dicePerRoll,
+  uint8_t sidesPerDie,
+
+  uint8_t selectedDieIndex,
+  Direction activeCaret,
+
+  Arduboy2 arduboy,
+  Tinyfont tinyfont,
+
+  uint8_t dieSize = DIE_CHAR_WIDTH * 2 + 8 // a little arbitrary
+) {
+  const uint8_t xOffset = (WIDTH - (dieSize * 3 + GAP * 2)) / 2;
+  const uint8_t y = (HEIGHT - dieSize) / 2;
+
+  String dieValues[3] = { String(dicePerRoll), "d", String(sidesPerDie) };
+
+  for (uint8_t i = 0; i < 3; i++) {
+    uint8_t x = xOffset + (dieSize + GAP) * i;
+
+    if (i != 1) {
+      drawCaret(
+        x + (dieSize - CARET_SIZE) / 2, y - (FRAME + GAP),
+        Direction::Up,
+        selectedDieIndex == i && activeCaret == Direction::Up,
+        arduboy
+      );
+
+      drawCaret(
+        x + (dieSize - CARET_SIZE) / 2, y + dieSize + GAP,
+        Direction::Down,
+        selectedDieIndex == i && activeCaret == Direction::Down,
+        arduboy
+      );
+    }
+
+    drawDie(
+      x, y,
+      dieValues[i],
+      arduboy, tinyfont,
+      dieSize, false, OUTER_FILLET, selectedDieIndex == i
+    );
+  }
+}
+
+// TODO: title
 void drawSidebar(
   uint8_t x,
   uint8_t y,
@@ -175,6 +248,7 @@ uint8_t getIdealGraphWidth(
     + (FRAME_GAP + FRAME) * 2 + GAP * (barsCount - 1);
 }
 
+// TODO: fix for 6d20/etc
 void drawGraph(
   uint8_t x,
   uint8_t y,
