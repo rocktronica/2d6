@@ -53,33 +53,30 @@ void drawDie(
   Arduboy2 arduboy,
   Tinyfont tinyfont,
 
-  bool inFlux = false,
-  uint8_t maxValue = 9,
-
-  uint8_t width = DIE_SIZE,
-  uint8_t height = DIE_SIZE
+  uint8_t size = DIE_SIZE,
+  bool useTinyFont = false,
+  uint8_t fillet = INNER_FILLET
 ) {
-  String displayValue = inFlux
-    ? String(random(1, maxValue + 1))
-    : value != "0" ? value : "?";
+  uint8_t textWidth = value.length() * DIE_CHAR_WIDTH
+    + (value.length() - 1);
 
-  if (maxValue < 10) {
-    arduboy.setCursor(
-      x + (float(width) - DIE_CHAR_WIDTH) / 2,
-      y + (float(height) - DIE_CHAR_HEIGHT) / 2
-    );
-    arduboy.print(displayValue);
-  } else {
+  if (useTinyFont) {
     tinyfont.setCursor(
-      x + (float(width)
+      x + (float(size)
         - (value.length() < 2 ? DIE_CHAR_SMALL : DIE_CHAR_SMALL * 2 + 1)) / 2,
-      y + (float(height) - DIE_CHAR_SMALL) / 2
+      y + (float(size) - DIE_CHAR_SMALL) / 2
     );
-    tinyfont.print(displayValue);
+    tinyfont.print(value);
+  } else {
+    arduboy.setCursor(
+      x + (float(size) - textWidth) / 2,
+      y + (float(size) - DIE_CHAR_HEIGHT) / 2
+    );
+    arduboy.print(value);
   }
 
   // Intentionally draw container after text to ensure visibility
-  arduboy.drawRoundRect(x, y, width, height, INNER_FILLET);
+  arduboy.drawRoundRect(x, y, size, size, fillet);
 }
 
 // TODO: drawMenu
@@ -90,14 +87,23 @@ void drawTitle(
   bool inFlux,
 
   Arduboy2 arduboy,
-  Tinyfont tinyfont
-) {
-  const uint8_t xOffset = (WIDTH - (DIE_SIZE * 3 + GAP * 2)) / 2;
-  const uint8_t y = (HEIGHT - DIE_SIZE) / 2;
+  Tinyfont tinyfont,
 
-  drawDie(xOffset + (DIE_SIZE + GAP) * 0, y, String(dicePerRoll), arduboy, tinyfont, inFlux);
-  drawDie(xOffset + (DIE_SIZE + GAP) * 1, y, "d", arduboy, tinyfont, inFlux);
-  drawDie(xOffset + (DIE_SIZE + GAP) * 2, y, String(sidesPerDie), arduboy, tinyfont, inFlux);
+  uint8_t size = DIE_CHAR_WIDTH * 2 + 8 // a little arbitrary
+) {
+  const uint8_t xOffset = (WIDTH - (size * 3 + GAP * 2)) / 2;
+  const uint8_t y = (HEIGHT - size) / 2;
+
+  String dieValues[3] = { String(dicePerRoll), "d", String(sidesPerDie) };
+
+  for (uint8_t i = 0; i < 3; i++) {
+    drawDie(
+      xOffset + (size + GAP) * i, y,
+      dieValues[i],
+      arduboy, tinyfont,
+      size, false, OUTER_FILLET
+    );
+  }
 }
 
 void drawSidebar(
@@ -133,9 +139,11 @@ void drawSidebar(
     drawDie(
       x + FRAME + FRAME_GAP + xOffset + (i % diceColumns) * (DIE_SIZE + GAP),
       y + FRAME + FRAME_GAP + floor(i / diceColumns) * (DIE_SIZE + GAP),
-      String(values[i]),
+      inFlux
+        ? String(random(1, maxValue + 1))
+        : values[i] == 0 ? "?" : String(values[i]),
       arduboy, tinyfont,
-      inFlux, maxValue
+      DIE_SIZE, maxValue >= 10
     );
   }
 
