@@ -192,22 +192,30 @@ void drawGraph(
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
   uint8_t barWidth = getIdealGraphBarWidth(width, barsCount);
-  int sumCount = getMaxValue(sumCounts, barsCount);
+  int maxCount = getMaxValue(sumCounts, barsCount);
 
   const uint8_t xOffset = (width - getIdealGraphWidth(width, barsCount)) / 2;
 
   for (uint8_t i = 0; i < barsCount; i++) {
-    uint8_t barHeight = (float(sumCounts[i]) / sumCount) * (height - (FRAME_GAP + FRAME) * 2);
+    uint8_t barHeight = (float(sumCounts[i]) / maxCount) * (height - (FRAME_GAP + FRAME) * 2);
 
     if (barHeight > 0) {
-      arduboy.fillRoundRect(
+      arduboy.fillRect(
         x + xOffset + (FRAME_GAP + FRAME) + i * (barWidth + GAP),
         y + height - barHeight - (FRAME_GAP + FRAME),
         max(1, barWidth),
-        barHeight,
-        barWidth > INNER_FILLET * 2
-          ? (barHeight > INNER_FILLET * 2 ? INNER_FILLET : 0)
-          : 0
+        barHeight
+      );
+    }
+  }
+
+  if (maxCount <= (height - (FRAME_GAP + FRAME) * 2) / 2) {
+    for (uint8_t i = 1; i < maxCount; i++) {
+      arduboy.drawFastHLine(
+        x + (FRAME_GAP + FRAME),
+        y + (FRAME_GAP + FRAME) + (height - (FRAME_GAP + FRAME) * 2) * (float(i) / maxCount),
+        width - (FRAME_GAP + FRAME) * 2,
+        BLACK
       );
     }
   }
