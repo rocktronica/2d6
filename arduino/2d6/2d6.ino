@@ -152,8 +152,9 @@ void loop() {
     drawSidebar(
       0, 0,
       currentRollValues, dicePerRoll, sidesPerDie,
-        "AVG:\n" + (rollsCount > 0 ? String(float(totalSum) / rollsCount) : "?")
-        + "\n\nROLLS:\n" + String(rollsCount),
+        "NOW:" + String(getSum(currentRollValues, dicePerRoll))
+        + "\nAVG:" + (rollsCount > 0 ? getPrettyAverage(totalSum, rollsCount) : "?")
+        + "\n\nCOUNT:\n" + String(rollsCount),
       framesRemaining > 0,
       arduboy, tinyfont
     );

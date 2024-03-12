@@ -49,6 +49,12 @@ uint8_t getSum(uint8_t values[], uint8_t size) {
   return sum;
 }
 
+String getPrettyAverage(uint32_t total, int size) {
+  char response[4];
+  dtostrf(float(total) / size, -4, 1, response);
+  return response;
+}
+
 int getMaxValue(int values[], uint8_t size) {
   int maxValue = 0;
 
