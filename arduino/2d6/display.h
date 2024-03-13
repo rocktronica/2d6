@@ -20,7 +20,7 @@
 # define ROLL_FRAMES        5
 # define UPDATE_FRAMES      2
 
-# define CARET_SIZE         6
+# define CARET_SIZE         4
 
 enum GameState {
   Title,
@@ -152,25 +152,25 @@ void drawMenu(
   uint8_t dieSize = DIE_CHAR_WIDTH * 2 + 8 // a little arbitrary
 ) {
   const uint8_t xOffset = (WIDTH - (dieSize * 3 + GAP * 2)) / 2;
-  const uint8_t y = (HEIGHT - dieSize) / 2;
+  const uint8_t y = 12;
 
   String dieValues[3] = { String(dicePerRoll), "d", String(sidesPerDie) };
 
   for (uint8_t i = 0; i < 3; i++) {
     uint8_t x = xOffset + (dieSize + GAP) * i;
 
-    if (i != 1) {
+    if (selectedDieIndex == i && i != MenuDie::Dee) {
       drawCaret(
         x + (dieSize - CARET_SIZE) / 2, y - (FRAME + GAP),
         Direction::Up,
-        selectedDieIndex == i && activeCaret == Direction::Up,
+        activeCaret == Direction::Up,
         arduboy
       );
 
       drawCaret(
         x + (dieSize - CARET_SIZE) / 2, y + dieSize + GAP,
         Direction::Down,
-        selectedDieIndex == i && activeCaret == Direction::Down,
+        activeCaret == Direction::Down,
         arduboy
       );
     }
@@ -182,6 +182,24 @@ void drawMenu(
       dieSize, false, OUTER_FILLET, selectedDieIndex == i
     );
   }
+
+  tinyfont.setCursor(
+    (WIDTH - (DIE_CHAR_SMALL * 22 + (22 - 1))) / 2,
+    40
+  );
+  tinyfont.print("DICE ROLL DISTRIBUTION");
+
+  tinyfont.setCursor(
+    (WIDTH - (DIE_CHAR_SMALL * 10 + (10 - 1))) / 2,
+    40 + DIE_CHAR_SMALL + 1
+  );
+  tinyfont.print("VISUALIZER");
+
+  tinyfont.setCursor(
+    (WIDTH - (DIE_CHAR_SMALL * 14 + (14 - 1))) / 2,
+    40 + (DIE_CHAR_SMALL + 1) * 2 + DIE_CHAR_SMALL
+  );
+  tinyfont.print("A:RESET B:ROLL");
 }
 
 // TODO: title
