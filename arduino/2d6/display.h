@@ -10,6 +10,7 @@
 # define FRAME              1
 # define FRAME_GAP          2
 # define GAP                1
+# define DIALOG_GAP         3
 
 # define DIE_SIZE           13
 # define DIE_CHAR_WIDTH     5    // Default Arduboy font
@@ -62,6 +63,106 @@ int getMaxValue(int values[], uint8_t size) {
   }
 
   return maxValue;
+}
+
+void drawPanel(
+  uint8_t x,
+  uint8_t y,
+
+  uint8_t width,
+  uint8_t height,
+
+  String title,
+
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  arduboy.fillRoundRect(x, y, width, height, OUTER_FILLET, BLACK);
+  arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
+
+  arduboy.drawFastHLine(x, y + DIE_CHAR_SMALL + FRAME + GAP + GAP, width);
+
+  tinyfont.setCursor(
+    (WIDTH - (DIE_CHAR_SMALL * title.length() + (title.length() - 1))) / 2,
+    y + (FRAME + GAP)
+  );
+  tinyfont.print(title);
+}
+
+void drawDialog(
+  uint8_t width,
+  uint8_t height,
+
+  String title,
+
+  String options[],
+  uint8_t optionsSize,
+  uint8_t selectedOptionIndex,
+
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  drawPanel(
+    (WIDTH - width) / 2, (HEIGHT - height) / 2,
+    width, height,
+    title,
+    arduboy, tinyfont
+  );
+
+  for (uint8_t i = 0; i < optionsSize; i++) {
+    tinyfont.setCursor(
+      (WIDTH - width) / 2 + (FRAME + DIALOG_GAP),
+      (HEIGHT - height) / 2 + FRAME * 2 + GAP * 2
+        + DIE_CHAR_SMALL + DIALOG_GAP
+        + (DIE_CHAR_SMALL + GAP) * i
+    );
+    tinyfont.print(
+      (selectedOptionIndex == i ? ">" : " ") + options[i]
+    );
+  }
+}
+
+uint8_t getMinDialogWidth(
+  String title,
+  String options[],
+  uint8_t optionsSize
+) {
+  uint8_t maxChars = title.length() + 2;
+
+  for (uint8_t i = 0; i < optionsSize; i++) {
+    maxChars = max(maxChars, options[i].length() + 2);
+  }
+
+  return (FRAME + DIALOG_GAP) * 2
+    + maxChars * DIE_CHAR_SMALL + (maxChars - 1) * GAP;
+}
+
+uint8_t getMinDialogHeight(
+  uint8_t optionsSize
+) {
+  return (FRAME + GAP) * 2 + DIE_CHAR_SMALL
+    + DIALOG_GAP * 2 + FRAME
+    + DIE_CHAR_SMALL * optionsSize
+    + GAP * (optionsSize - 1);
+}
+
+void drawDialog(
+  String title,
+
+  String options[],
+  uint8_t optionsSize,
+  uint8_t selectedOptionIndex,
+
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  drawDialog(
+    getMinDialogWidth(title, options, optionsSize),
+    getMinDialogHeight(optionsSize),
+    title,
+    options, optionsSize, selectedOptionIndex,
+    arduboy, tinyfont
+  );
 }
 
 // TODO: BIG version for tabletop play
