@@ -22,7 +22,7 @@
 
 # define CARET_SIZE         4
 
-enum GameState {
+enum Stage {
   Title,
   Operation
 };

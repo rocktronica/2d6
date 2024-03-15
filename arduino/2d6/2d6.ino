@@ -15,53 +15,70 @@ Arduboy2 arduboy;
 ArduboyTones sound(arduboy.audio.enabled);
 Tinyfont tinyfont = Tinyfont(arduboy.sBuffer, WIDTH, HEIGHT);
 
-GameState gameState = GameState::Title;
+struct SettingsState {
+  Stage stage = Stage::Title;
 
-uint8_t framesRemaining;
-MenuDie activeMenuDie = MenuDie::DicePerRoll;
-Direction activeCaret = Direction::None;
+  uint8_t dicePerRoll = DEFAULT_DICE_PER_ROLL;
+  uint8_t sidesPerDie = DEFAULT_SIDES_PER_DIE;
+} settings;
 
-uint8_t dicePerRoll = DEFAULT_DICE_PER_ROLL;
-uint8_t sidesPerDie = DEFAULT_SIDES_PER_DIE;
+struct DisplayState {
+  uint8_t framesRemaining;
+  MenuDie activeMenuDie = MenuDie::DicePerRoll;
+  Direction activeCaret = Direction::None;
+  uint8_t selectionIndex = 0;
+} display;
 
-uint8_t minSum;
-uint8_t maxSum;
-uint8_t uniqueSumsCount;
-uint8_t currentRollValues[MAX_DICE_PER_ROLL];
-int sumCounts[MAX_DICE_PER_ROLL * MAX_SIDES_PER_DIE];
-int rollsCount;
-uint32_t totalSum;
+struct OperationState {
+  uint8_t currentRollValues[MAX_DICE_PER_ROLL];
+  int sumCounts[MAX_DICE_PER_ROLL * MAX_SIDES_PER_DIE];
+  int rollsCount;
+  uint32_t totalSum;
+} operation;
+
+uint8_t getMinSum() {
+  return settings.dicePerRoll * 1;
+}
+
+uint8_t getMaxSum() {
+  return settings.dicePerRoll * settings.sidesPerDie;
+}
+
+uint8_t getUniqueSumsCount() {
+  return getMaxSum() - getMinSum() + 1;
+}
 
 void roll(int count = 1) {
   while (count > 0) {
-    for (uint8_t i = 0; i < dicePerRoll; i++) {
-      currentRollValues[i] = random(1, sidesPerDie + 1);
+    for (uint8_t i = 0; i < settings.dicePerRoll; i++) {
+      operation.currentRollValues[i] =
+        random(1, settings.sidesPerDie + 1);
     }
 
-    sumCounts[getSum(currentRollValues, dicePerRoll) - minSum] += 1;
-    totalSum += getSum(currentRollValues, dicePerRoll);
+    operation.sumCounts[
+      getSum(operation.currentRollValues, settings.dicePerRoll)
+      - getMinSum()
+    ] += 1;
+    operation.totalSum +=
+      getSum(operation.currentRollValues, settings.dicePerRoll);
 
     count -= 1;
-    rollsCount += 1;
+    operation.rollsCount += 1;
   }
 
-  framesRemaining = ROLL_FRAMES;
+  display.framesRemaining = ROLL_FRAMES;
 }
 
 void reset() {
-  for (uint8_t i = 0; i < dicePerRoll; i++) {
-    currentRollValues[i] = 0;
+  for (uint8_t i = 0; i < settings.dicePerRoll; i++) {
+    operation.currentRollValues[i] = 0;
   }
-  for (uint8_t i = 0; i < uniqueSumsCount; i++) {
-    sumCounts[i] = 0;
+  for (uint8_t i = 0; i < getUniqueSumsCount(); i++) {
+    operation.sumCounts[i] = 0;
   }
 
-  rollsCount = 0;
-  totalSum = 0;
-
-  minSum = dicePerRoll * 1;
-  maxSum = dicePerRoll * sidesPerDie;
-  uniqueSumsCount = maxSum - minSum + 1;
+  operation.rollsCount = 0;
+  operation.totalSum = 0;
 }
 
 void setup() {
@@ -76,47 +93,51 @@ void setup() {
 void handleMenuEvents() {
   if (arduboy.everyXFrames(UPDATE_FRAMES)) {
     if (arduboy.pressed(LEFT_BUTTON)) {
-      activeMenuDie = max(0, activeMenuDie - 1);
+      display.activeMenuDie = max(0, display.activeMenuDie - 1);
     } else if (arduboy.pressed(RIGHT_BUTTON)) {
-      activeMenuDie = min(2, activeMenuDie + 1);
+      display.activeMenuDie = min(2, display.activeMenuDie + 1);
     }
 
     if (arduboy.pressed(UP_BUTTON)) {
-      activeCaret = Direction::Up;
-      framesRemaining = CARET_FRAMES;
+      display.activeCaret = Direction::Up;
+      display.framesRemaining = CARET_FRAMES;
 
-      if (activeMenuDie == MenuDie::DicePerRoll) {
-        dicePerRoll = min(dicePerRoll + 1, MAX_DICE_PER_ROLL);
-      } else if (activeMenuDie == MenuDie::SidesPerDie) {
-        sidesPerDie = min(sidesPerDie + 1, MAX_SIDES_PER_DIE);
+      if (display.activeMenuDie == MenuDie::DicePerRoll) {
+        settings.dicePerRoll =
+          min(settings.dicePerRoll + 1, MAX_DICE_PER_ROLL);
+      } else if (display.activeMenuDie == MenuDie::SidesPerDie) {
+        settings.sidesPerDie =
+          min(settings.sidesPerDie + 1, MAX_SIDES_PER_DIE);
       }
     } else if (arduboy.pressed(DOWN_BUTTON)) {
-      activeCaret = Direction::Down;
-      framesRemaining = CARET_FRAMES;
+      display.activeCaret = Direction::Down;
+      display.framesRemaining = CARET_FRAMES;
 
-      if (activeMenuDie == MenuDie::DicePerRoll) {
-        dicePerRoll = max(MIN_DICE_PER_ROLL, dicePerRoll - 1);
-      } else if (activeMenuDie == MenuDie::SidesPerDie) {
-        sidesPerDie = max(MIN_SIDES_PER_DIE, sidesPerDie - 1);
+      if (display.activeMenuDie == MenuDie::DicePerRoll) {
+        settings.dicePerRoll =
+          max(MIN_DICE_PER_ROLL, settings.dicePerRoll - 1);
+      } else if (display.activeMenuDie == MenuDie::SidesPerDie) {
+        settings.sidesPerDie =
+          max(MIN_SIDES_PER_DIE, settings.sidesPerDie - 1);
       }
     }
   }
 
   if (arduboy.justPressed(B_BUTTON)) {
-    gameState = GameState::Operation;
+    settings.stage = Stage::Operation;
     reset();
   }
 }
 
 void handleOperationEvents() {
   if (arduboy.justPressed(A_BUTTON)) {
-    gameState = GameState::Title;
-    framesRemaining = ROLL_FRAMES;
+    settings.stage = Stage::Title;
+    display.framesRemaining = ROLL_FRAMES;
   }
 
   // TODO: prevent unintentional initial rolls after title
   if (arduboy.pressed(B_BUTTON)) {
-    if (rollsCount == 0) {
+    if (operation.rollsCount == 0) {
         arduboy.initRandomSeed();
     }
 
@@ -132,36 +153,49 @@ void loop() {
   arduboy.pollButtons();
   arduboy.clear();
 
-  framesRemaining = max(0, framesRemaining - 1);
+  display.framesRemaining =
+    max(0, display.framesRemaining - 1);
 
-  if (gameState == GameState::Title) {
+  if (settings.stage == Stage::Title) {
     handleMenuEvents();
 
     drawMenu(
-      dicePerRoll, sidesPerDie,
-      activeMenuDie, activeCaret,
+      settings.dicePerRoll, settings.sidesPerDie,
+      display.activeMenuDie, display.activeCaret,
       arduboy, tinyfont
     );
 
-    if (framesRemaining == 0) {
-      activeCaret = Direction::None;
+    if (display.framesRemaining == 0) {
+      display.activeCaret = Direction::None;
     }
   } else {
     handleOperationEvents();
 
     drawSidebar(
       0, 0,
-      currentRollValues, dicePerRoll, sidesPerDie,
-        "NOW:" + String(getSum(currentRollValues, dicePerRoll))
-        + "\nAVG:" + (rollsCount > 0 ? getPrettyAverage(totalSum, rollsCount) : "?")
-        + "\n\nCOUNT:\n" + String(rollsCount),
-      framesRemaining > 0,
+
+      operation.currentRollValues,
+      settings.dicePerRoll,
+      settings.sidesPerDie,
+
+      "NOW:" + String(getSum(operation.currentRollValues,
+        settings.dicePerRoll))
+      + "\nAVG:" + (operation.rollsCount > 0 ?
+        getPrettyAverage(operation.totalSum, operation.rollsCount)
+        : "?")
+      + "\n\nCOUNT:\n" + String(operation.rollsCount),
+
+      display.framesRemaining > 0,
+
       arduboy, tinyfont
     );
 
     drawGraph(
       WIDTH - GRAPH_WIDTH, 0,
-      sumCounts, minSum, maxSum, uniqueSumsCount,
+      operation.sumCounts,
+      getMinSum(),
+      getMaxSum(),
+      getUniqueSumsCount(),
       arduboy
     );
   }
