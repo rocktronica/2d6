@@ -18,7 +18,6 @@
 
 # define CARET_FRAMES       3
 # define ROLL_FRAMES        5
-# define UPDATE_FRAMES      2
 
 # define CARET_SIZE         4
 
