@@ -23,6 +23,7 @@
 # define CARET_SIZE         4
 
 enum Stage {
+  SetSound,
   Title,
   Operation
 };

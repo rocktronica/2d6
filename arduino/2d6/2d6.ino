@@ -2,6 +2,7 @@
 #include <ArduboyTones.h>
 #include <Tinyfont.h>
 #include "display.h"
+#include "noise.h"
 
 # define MIN_DICE_PER_ROLL  1
 # define DEFAULT_DICE_PER_ROLL  2
@@ -12,21 +13,22 @@
 # define MAX_SIDES_PER_DIE  20
 
 Arduboy2 arduboy;
-ArduboyTones sound(arduboy.audio.enabled);
+ArduboyTones arduboyTones(arduboy.audio.enabled);
 Tinyfont tinyfont = Tinyfont(arduboy.sBuffer, WIDTH, HEIGHT);
 
 struct SettingsState {
-  Stage stage = Stage::Title;
+  Stage stage = Stage::SetSound;
 
   uint8_t dicePerRoll = DEFAULT_DICE_PER_ROLL;
   uint8_t sidesPerDie = DEFAULT_SIDES_PER_DIE;
+
+  Volume volume = Volume::Low;
 } settings;
 
 struct DisplayState {
   uint8_t framesRemaining;
   MenuDie activeMenuDie = MenuDie::DicePerRoll;
   Direction activeCaret = Direction::None;
-  uint8_t selectionIndex = 0;
 } display;
 
 struct OperationState {
@@ -67,6 +69,7 @@ void roll(int count = 1) {
   }
 
   display.framesRemaining = ROLL_FRAMES;
+  makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
 }
 
 void reset() {
@@ -93,23 +96,30 @@ void setup() {
 uint8_t getDialogValueWithSideEffects(
   uint8_t initialValue,
   uint8_t minValue,
-  uint8_t maxValue
+  uint8_t maxValue,
+
+  bool invert = false
 ) {
-  Direction direction = Direction::None;
+  bool up;
 
   if (arduboy.justPressed(UP_BUTTON)) {
-    direction = Direction::Up;
+    up = true;
   } else if (arduboy.justPressed(DOWN_BUTTON)) {
-    direction = Direction::Down;
+    up = false;
   } else {
     return initialValue;
   }
 
-  // The side effects:
-  display.activeCaret = direction;
-  display.framesRemaining = CARET_FRAMES;
+  if (invert) {
+    up = !up;
+  }
 
-  return direction == Direction::Up
+  // The side effects:
+  display.activeCaret = up ? Direction::Up : Direction::Down;
+  display.framesRemaining = CARET_FRAMES;
+  makeNoise(arduboyTones, JUMP_TONES, settings.volume);
+
+  return up
     ? min(initialValue + 1, maxValue)
     : max(minValue, initialValue - 1);
 }
@@ -177,7 +187,32 @@ void loop() {
   display.framesRemaining =
     max(0, display.framesRemaining - 1);
 
-  if (settings.stage == Stage::Title) {
+  if (settings.stage == Stage::SetSound) {
+    const String options[3] = { "HIGH", "LOW", "NONE" };
+
+    drawDialog(
+      "SOUND",
+      options, 3, settings.volume,
+      arduboy, tinyfont
+    );
+
+    settings.volume = getDialogValueWithSideEffects(
+      settings.volume,
+      Volume::High,
+      Volume::Mute,
+      true
+    );
+
+    if (arduboy.justPressed(B_BUTTON)) {
+      settings.stage = Stage::Title;
+
+      arduboyTones.volumeMode(
+        settings.volume == Volume::High
+          ? VOLUME_ALWAYS_HIGH
+          : VOLUME_ALWAYS_NORMAL
+      );
+    }
+  } else if (settings.stage == Stage::Title) {
     handleMenuEvents();
 
     drawMenu(
