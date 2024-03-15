@@ -147,12 +147,17 @@ void handleOperationEvents() {
     display.framesRemaining = ROLL_FRAMES;
   }
 
-  // TODO: prevent unintentional initial rolls after title
-  if (arduboy.pressed(B_BUTTON)) {
+  if (arduboy.justPressed(B_BUTTON)) {
     if (operation.rollsCount == 0) {
         arduboy.initRandomSeed();
     }
+    roll();
+  }
 
+  if (
+    arduboy.pressed(B_BUTTON) &&
+    operation.rollsCount > 0
+  ) {
     roll(arduboy.pressed(UP_BUTTON) ? 10 : 1);
   }
 }
