@@ -115,15 +115,19 @@ uint8_t getDialogValueWithSideEffects(
 }
 
 void handleMenuEvents() {
-  if (arduboy.justPressed(LEFT_BUTTON)) {
-    display.activeMenuDie = max(0, display.activeMenuDie - 1);
-  } else if (arduboy.justPressed(RIGHT_BUTTON)) {
-    display.activeMenuDie = min(2, display.activeMenuDie + 1);
-  }
-
-  if (arduboy.justPressed(B_BUTTON)) {
+  if (
+    arduboy.justPressed(B_BUTTON) &&
+    display.activeMenuDie == MenuDie::SidesPerDie
+  ) {
     settings.stage = Stage::Operation;
     reset();
+  } else if (
+    arduboy.justPressed(RIGHT_BUTTON) ||
+    arduboy.justPressed(B_BUTTON)
+  ) {
+    display.activeMenuDie = min(2, display.activeMenuDie + 1);
+  } else if (arduboy.justPressed(LEFT_BUTTON)) {
+    display.activeMenuDie = max(0, display.activeMenuDie - 1);
   }
 
   if (display.activeMenuDie == MenuDie::DicePerRoll) {
@@ -144,7 +148,7 @@ void handleMenuEvents() {
 void handleOperationEvents() {
   if (arduboy.justPressed(A_BUTTON)) {
     settings.stage = Stage::Title;
-    display.framesRemaining = ROLL_FRAMES;
+    display.activeMenuDie = MenuDie::DicePerRoll;
   }
 
   if (arduboy.justPressed(B_BUTTON)) {
