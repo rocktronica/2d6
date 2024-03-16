@@ -19,7 +19,7 @@
 # define DIE_CHAR_HEIGHT    7    // Default Arduboy font
 # define DIE_CHAR_SMALL     4    // TinyFont 4x4
 
-# define CARET_FRAMES       3
+# define CARET_FRAMES       1
 # define ROLL_FRAMES        3
 
 # define CARET_SIZE         4
@@ -251,25 +251,15 @@ void drawCaret(
   uint8_t y,
 
   Direction direction,
-  bool fill, // TODO: bump instead
 
   Arduboy2 arduboy
 ) {
-  if (fill) {
-    arduboy.fillTriangle(
-      x, y,
-      x + CARET_SIZE, y,
-      x + CARET_SIZE / 2,
-        y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
-    );
-  } else {
-    arduboy.drawTriangle(
-      x, y,
-      x + CARET_SIZE, y,
-      x + CARET_SIZE / 2,
-        y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
-    );
-  }
+  arduboy.drawTriangle(
+    x, y,
+    x + CARET_SIZE, y,
+    x + CARET_SIZE / 2,
+      y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
+  );
 }
 
 void drawMenu(
@@ -292,24 +282,29 @@ void drawMenu(
   for (uint8_t i = 0; i < 3; i++) {
     uint8_t x = xOffset + (dieSize + GAP) * i;
 
+    uint8_t upBump =
+      selectedDieIndex == i && activeCaret == Direction::Up ? 1 : 0;
+    uint8_t downBump =
+      selectedDieIndex == i && activeCaret == Direction::Down ? 1 : 0;
+
     if (selectedDieIndex == i && i != MenuDie::Dee) {
       drawCaret(
-        x + (dieSize - CARET_SIZE) / 2, y - (FRAME + GAP),
+        x + (dieSize - CARET_SIZE) / 2,
+        y - (FRAME + GAP) - upBump,
         Direction::Up,
-        activeCaret == Direction::Up,
         arduboy
       );
 
       drawCaret(
-        x + (dieSize - CARET_SIZE) / 2, y + dieSize + GAP,
+        x + (dieSize - CARET_SIZE) / 2,
+        y + dieSize + GAP + downBump,
         Direction::Down,
-        activeCaret == Direction::Down,
         arduboy
       );
     }
 
     drawDie(
-      x, y,
+      x, y - upBump + downBump,
       dieValues[i],
       arduboy, tinyfont,
       dieSize, false, OUTER_FILLET, selectedDieIndex == i
