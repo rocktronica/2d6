@@ -225,6 +225,7 @@ void drawRollingDie(
   uint8_t y,
 
   uint8_t framesRemaining,
+  bool clockwise,
 
   Arduboy2 arduboy,
   Tinyfont tinyfont,
@@ -234,11 +235,13 @@ void drawRollingDie(
   drawRotatedSquare(
     x, y,
     size,
-    (float(framesRemaining) / ROLL_FRAMES)
-      * (90 * (float(ROLL_FRAMES - 1) / ROLL_FRAMES)),
+    clockwise
+      ? 90 - getRotatedSquareRotation(framesRemaining, ROLL_FRAMES)
+      : getRotatedSquareRotation(framesRemaining, ROLL_FRAMES),
     arduboy
   );
 
+  // TODO: move cursor around 2x2
   tinyfont.setCursor(
     x + (size - DIE_CHAR_SMALL) / 2 + 1,
     y + (size - DIE_CHAR_SMALL) / 2 + 1
@@ -366,10 +369,16 @@ void drawSidebar(
     uint8_t diceY = y + FRAME + FRAME_GAP
       + floor(i / diceColumns) * (DIE_SIZE + GAP);
 
-    if (framesRemaining > 0) {
+    // CONSIDER: randomize on animation start; clockwise too
+    uint8_t dieFramesRemaining = (i == 2 || i == 3)
+      ? max(0, framesRemaining - 1)
+      : framesRemaining;
+
+    if (dieFramesRemaining > 0) {
       drawRollingDie(
         diceX, diceY,
-        framesRemaining,
+        dieFramesRemaining,
+        i % 2 == 0,
         arduboy, tinyfont
       );
     } else {

@@ -160,6 +160,7 @@ void handleMenuEvents() {
 }
 
 void handleOperationEvents() {
+  // TODO: hold to reset w/ dialog
   if (arduboy.justPressed(A_BUTTON)) {
     settings.stage = Stage::Title;
     display.activeMenuDie = MenuDie::DicePerRoll;

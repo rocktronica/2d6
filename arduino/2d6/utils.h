@@ -43,6 +43,13 @@ void drawPolygon(Xy points[], uint8_t size, Arduboy2 arduboy) {
   drawLine(points[0].x, points[0].y, points[size - 1].x, points[size - 1].y, arduboy);
 };
 
+int8_t getRotatedSquareRotation(
+  uint8_t framesRemaining,
+  uint8_t size
+) {
+  return (float(framesRemaining) / size) * (90 * (float(size - 1) / size));
+}
+
 void drawRotatedSquare(
   uint8_t x,
   uint8_t y,
