@@ -68,7 +68,11 @@ void roll(int count = 1) {
     operation.rollsCount += 1;
   }
 
-  display.framesRemaining = ROLL_FRAMES;
+  // Start animation only if idle
+  display.framesRemaining = display.framesRemaining > 0
+    ? display.framesRemaining
+    : ROLL_FRAMES;
+
   makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
 }
 
@@ -234,14 +238,14 @@ void loop() {
       settings.dicePerRoll,
       settings.sidesPerDie,
 
-      "NOW:" + String(getSum(operation.currentRollValues,
+      + "NOW:" + String(getSum(operation.currentRollValues,
         settings.dicePerRoll))
       + "\nAVG:" + (operation.rollsCount > 0 ?
         getPrettyAverage(operation.totalSum, operation.rollsCount)
         : "?")
       + "\n\nCOUNT:\n" + String(operation.rollsCount),
 
-      display.framesRemaining > 0,
+      display.framesRemaining,
 
       arduboy, tinyfont
     );

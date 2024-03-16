@@ -1,6 +1,8 @@
 #ifndef graph_h
 #define graph_h
 
+#include "utils.h"
+
 # define SIDEBAR_WIDTH      45
 # define GRAPH_WIDTH        (WIDTH - SIDEBAR_WIDTH - FRAME_GAP)
 
@@ -18,7 +20,7 @@
 # define DIE_CHAR_SMALL     4    // TinyFont 4x4
 
 # define CARET_FRAMES       3
-# define ROLL_FRAMES        5
+# define ROLL_FRAMES        3
 
 # define CARET_SIZE         4
 
@@ -214,12 +216,42 @@ void drawDie(
   }
 }
 
+const char ROLL_CHARS[] = {
+  '!','@','#','$','%','^','&','*'
+};
+
+void drawRollingDie(
+  uint8_t x,
+  uint8_t y,
+
+  uint8_t framesRemaining,
+
+  Arduboy2 arduboy,
+  Tinyfont tinyfont,
+
+  uint8_t size = DIE_SIZE
+) {
+  drawRotatedSquare(
+    x, y,
+    size,
+    (float(framesRemaining) / ROLL_FRAMES)
+      * (90 * (float(ROLL_FRAMES - 1) / ROLL_FRAMES)),
+    arduboy
+  );
+
+  tinyfont.setCursor(
+    x + (size - DIE_CHAR_SMALL) / 2 + 1,
+    y + (size - DIE_CHAR_SMALL) / 2 + 1
+  );
+  tinyfont.print(ROLL_CHARS[random(0, sizeof(ROLL_CHARS) + 1)]);
+}
+
 void drawCaret(
   uint8_t x,
   uint8_t y,
 
   Direction direction,
-  bool fill,
+  bool fill, // TODO: bump instead
 
   Arduboy2 arduboy
 ) {
@@ -313,7 +345,7 @@ void drawSidebar(
   uint8_t maxValue,
   String text,
 
-  bool inFlux,
+  uint8_t framesRemaining,
 
   Arduboy2 arduboy,
   Tinyfont tinyfont,
@@ -334,15 +366,25 @@ void drawSidebar(
     ) / 2;
 
   for (uint8_t i = 0; i < valuesCount; i++) {
-    drawDie(
-      x + FRAME + FRAME_GAP + xOffset + (i % diceColumns) * (DIE_SIZE + GAP),
-      y + FRAME + FRAME_GAP + floor(i / diceColumns) * (DIE_SIZE + GAP),
-      inFlux
-        ? String(random(1, maxValue + 1))
-        : values[i] == 0 ? "?" : String(values[i]),
-      arduboy, tinyfont,
-      DIE_SIZE, maxValue >= 10
-    );
+    uint8_t diceX = x + FRAME + FRAME_GAP
+      + xOffset + (i % diceColumns) * (DIE_SIZE + GAP);
+    uint8_t diceY = y + FRAME + FRAME_GAP
+      + floor(i / diceColumns) * (DIE_SIZE + GAP);
+
+    if (framesRemaining > 0) {
+      drawRollingDie(
+        diceX, diceY,
+        framesRemaining,
+        arduboy, tinyfont
+      );
+    } else {
+      drawDie(
+        diceX, diceY,
+        values[i] == 0 ? "?" : String(values[i]),
+        arduboy, tinyfont,
+        DIE_SIZE, maxValue >= 10
+      );
+    }
   }
 
   const uint8_t lineY = y + FRAME + FRAME_GAP
