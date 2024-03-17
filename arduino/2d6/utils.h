@@ -43,34 +43,35 @@ void drawPolygon(Xy points[], uint8_t size, Arduboy2 arduboy) {
   drawLine(points[0].x, points[0].y, points[size - 1].x, points[size - 1].y, arduboy);
 };
 
-int8_t getRotatedSquareRotation(
-  uint8_t framesRemaining,
-  uint8_t size
-) {
-  return (float(framesRemaining) / size) * (90 * (float(size - 1) / size));
-}
+float getRadians(int16_t degrees) { return (float(degrees) * 71) / 4068; }
 
 void drawRotatedSquare(
-  uint8_t x,
-  uint8_t y,
+  int16_t x,
+  int16_t y,
 
   uint8_t size,
 
-  int8_t rotation,
+  int16_t degrees,
 
   Arduboy2 arduboy
 ) {
-  // Keep size behavior consistent with drawRect
-  size = size - 1;
+  float angleInRadians = getRadians(degrees);
+  float otherAngleInRadians = -getRadians(90 - degrees);
 
-  // TODO: perfect math
-  uint8_t offset = (float((360 + rotation) % 90) / 90) * size;
+  uint8_t radius = size / 2;
+  Xy center = {radius, radius };
+
+  int8_t adjacent = radius * cos(angleInRadians);
+  int8_t opposite = radius * sin(angleInRadians);
+
+  int8_t offAdjacent = radius * cos(otherAngleInRadians);
+  int8_t offOpposite = radius * sin(otherAngleInRadians);
 
   Xy points[4] = {
-    {x + offset, y},
-    {x + size, y + offset},
-    {x + size - offset, y + size},
-    {x, y + size - offset},
+    {x + center.x + adjacent, y + center.y + opposite},
+    {x + center.x + offAdjacent, y + center.y + offOpposite},
+    {x + center.x - adjacent, y + center.y - opposite},
+    {x + center.x - offAdjacent, y + center.y - offOpposite},
   };
   drawPolygon(points, 4, arduboy);
 }

@@ -221,8 +221,8 @@ const char ROLL_CHARS[] = {
 };
 
 void drawRollingDie(
-  uint8_t x,
-  uint8_t y,
+  int8_t x,
+  int8_t y,
 
   uint8_t framesRemaining,
   bool clockwise,
@@ -230,21 +230,27 @@ void drawRollingDie(
   Arduboy2 arduboy,
   Tinyfont tinyfont,
 
-  uint8_t size = DIE_SIZE
+  uint8_t size = DIE_SIZE,
+  int16_t coverage = 90
 ) {
+  int16_t degrees = 45 + (float(framesRemaining) / (ROLL_FRAMES + 1)) * coverage;
+  if (clockwise) { degrees = -degrees; }
+
+  uint8_t hypotenuse = sqrt(2 * size * size);
+  x = x - 1 - (hypotenuse - size) / 2;
+  y = y - 1 - (hypotenuse - size) / 2;
+
   drawRotatedSquare(
     x, y,
-    size,
-    clockwise
-      ? 90 - getRotatedSquareRotation(framesRemaining, ROLL_FRAMES)
-      : getRotatedSquareRotation(framesRemaining, ROLL_FRAMES),
+    hypotenuse,
+    degrees,
     arduboy
   );
 
   // TODO: move cursor around 2x2
   tinyfont.setCursor(
-    x + (size - DIE_CHAR_SMALL) / 2 + 1,
-    y + (size - DIE_CHAR_SMALL) / 2 + 1
+    x + (hypotenuse - DIE_CHAR_SMALL) / 2 + 1,
+    y + (hypotenuse - DIE_CHAR_SMALL) / 2 + 1
   );
   tinyfont.print(ROLL_CHARS[random(0, sizeof(ROLL_CHARS) + 1)]);
 }
@@ -273,10 +279,10 @@ void drawMenu(
   Direction activeCaret,
 
   Arduboy2 arduboy,
-  Tinyfont tinyfont,
-
-  uint8_t dieSize = DIE_CHAR_WIDTH * 2 + 8 // a little arbitrary
+  Tinyfont tinyfont
 ) {
+  uint8_t dieSize = DIE_CHAR_WIDTH * 2 + 8; // a little arbitrary
+
   const uint8_t xOffset = (WIDTH - (dieSize * 3 + GAP * 2)) / 2;
   const uint8_t y = 12;
 
@@ -369,6 +375,7 @@ void drawSidebar(
     uint8_t diceY = y + FRAME + FRAME_GAP
       + floor(i / diceColumns) * (DIE_SIZE + GAP);
 
+    // TODO: extract
     // CONSIDER: randomize on animation start; clockwise too
     uint8_t dieFramesRemaining = (i == 2 || i == 3)
       ? max(0, framesRemaining - 1)
