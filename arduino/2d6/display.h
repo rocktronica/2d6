@@ -19,14 +19,13 @@
 # define DIE_CHAR_HEIGHT    7    // Default Arduboy font
 # define DIE_CHAR_SMALL     4    // TinyFont 4x4
 
-# define CARET_FRAMES       1
 # define ROLL_FRAMES        3
 
-# define CARET_SIZE         4
-
-enum Stage {
-  SetSound,
+enum Dialog {
   Title,
+  SetSound,
+  SetDicePerRoll,
+  SetSidesPerDie,
   Operation
 };
 
@@ -34,12 +33,6 @@ enum Direction {
   None,
   Up,
   Down
-};
-
-enum MenuDie {
-  DicePerRoll = 0,
-  Dee,
-  SidesPerDie
 };
 
 uint8_t getSum(uint8_t values[], uint8_t size) {
@@ -168,6 +161,29 @@ void drawDialog(
   );
 }
 
+
+void drawDialog(
+  String title,
+
+  uint8_t options[],
+  uint8_t optionsSize,
+  uint8_t selectedOptionIndex,
+
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  String optionsAsStrings[optionsSize];
+  for (uint8_t i = 0; i < optionsSize; i++) {
+    optionsAsStrings[i] = String(options[i]);
+  }
+
+  drawDialog(
+    title,
+    optionsAsStrings, optionsSize, selectedOptionIndex,
+    arduboy, tinyfont
+  );
+}
+
 // TODO: BIG version for tabletop play
 void drawDie(
   uint8_t x,
@@ -255,28 +271,11 @@ void drawRollingDie(
   tinyfont.print(ROLL_CHARS[random(0, sizeof(ROLL_CHARS) + 1)]);
 }
 
-void drawCaret(
-  uint8_t x,
-  uint8_t y,
-
-  Direction direction,
-
-  Arduboy2 arduboy
-) {
-  arduboy.drawTriangle(
-    x, y,
-    x + CARET_SIZE, y,
-    x + CARET_SIZE / 2,
-      y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
-  );
-}
-
-void drawMenu(
+void drawTitle(
   uint8_t dicePerRoll,
   uint8_t sidesPerDie,
 
-  uint8_t selectedDieIndex,
-  Direction activeCaret,
+  uint8_t framesRemaining,
 
   Arduboy2 arduboy,
   Tinyfont tinyfont
@@ -284,59 +283,49 @@ void drawMenu(
   uint8_t dieSize = DIE_CHAR_WIDTH * 2 + 8; // a little arbitrary
 
   const uint8_t xOffset = (WIDTH - (dieSize * 3 + GAP * 2)) / 2;
-  const uint8_t y = 12;
+  const uint8_t y = 15;
 
   String dieValues[3] = { String(dicePerRoll), "d", String(sidesPerDie) };
 
   for (uint8_t i = 0; i < 3; i++) {
     uint8_t x = xOffset + (dieSize + GAP) * i;
 
-    uint8_t upBump =
-      selectedDieIndex == i && activeCaret == Direction::Up ? 1 : 0;
-    uint8_t downBump =
-      selectedDieIndex == i && activeCaret == Direction::Down ? 1 : 0;
-
-    if (selectedDieIndex == i && i != MenuDie::Dee) {
-      drawCaret(
-        x + (dieSize - CARET_SIZE) / 2,
-        y - (FRAME + GAP) - upBump,
-        Direction::Up,
-        arduboy
+    if (framesRemaining > 0) {
+      drawRollingDie(
+        x, y,
+        framesRemaining,
+        i % 2 == 0,
+        arduboy, tinyfont,
+        dieSize, 180
       );
-
-      drawCaret(
-        x + (dieSize - CARET_SIZE) / 2,
-        y + dieSize + GAP + downBump,
-        Direction::Down,
-        arduboy
+    } else {
+      drawDie(
+        x, y,
+        dieValues[i],
+        arduboy, tinyfont,
+        dieSize, false, OUTER_FILLET
       );
     }
-
-    drawDie(
-      x, y - upBump + downBump,
-      dieValues[i],
-      arduboy, tinyfont,
-      dieSize, false, OUTER_FILLET, selectedDieIndex == i
-    );
   }
 
+  // TODO: tidy
   tinyfont.setCursor(
-    (WIDTH - (DIE_CHAR_SMALL * 22 + (22 - 1))) / 2,
-    40
+    (WIDTH - (DIE_CHAR_SMALL * 9 + (9 - 1))) / 2,
+    36
   );
-  tinyfont.print("DICE ROLL DISTRIBUTION");
+  tinyfont.print("DICE ROLL");
+
+  tinyfont.setCursor(
+    (WIDTH - (DIE_CHAR_SMALL * 12 + (12 - 1))) / 2,
+    36 + (DIE_CHAR_SMALL + 1) * 1
+  );
+  tinyfont.print("DISTRIBUTION");
 
   tinyfont.setCursor(
     (WIDTH - (DIE_CHAR_SMALL * 10 + (10 - 1))) / 2,
-    40 + DIE_CHAR_SMALL + 1
+    36 + (DIE_CHAR_SMALL + 1) * 2
   );
   tinyfont.print("VISUALIZER");
-
-  tinyfont.setCursor(
-    (WIDTH - (DIE_CHAR_SMALL * 14 + (14 - 1))) / 2,
-    40 + (DIE_CHAR_SMALL + 1) * 2 + DIE_CHAR_SMALL
-  );
-  tinyfont.print("A:RESET B:ROLL");
 }
 
 // TODO: title

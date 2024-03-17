@@ -76,4 +76,18 @@ void drawRotatedSquare(
   drawPolygon(points, 4, arduboy);
 }
 
+int8_t getIndexOfValue(
+  uint8_t needle,
+  uint8_t haystack[],
+  uint8_t haystackSize
+) {
+  for (int i = 0; i < haystackSize; i++) {
+    if (haystack[i] == needle) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
 #endif
