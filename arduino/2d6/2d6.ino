@@ -117,25 +117,19 @@ uint8_t getDialogIndexWithSideEffects(
     : min(initialIndex + 1, maxIndex);
 }
 
-// TODO: dialog as pointer?
 void handleDialogNavigationEvents(
+  Dialog* dialog,
   Dialog maxDialog = Dialog::Operation
 ) {
-  if (
-    arduboy.justPressed(A_BUTTON) &&
-    display.dialog != 0
-  ) {
-    display.dialog = display.dialog - 1;
-  } else if (
-    arduboy.justPressed(B_BUTTON) &&
-    display.dialog != maxDialog
-  ) {
-    display.dialog = display.dialog + 1;
+  if (arduboy.justPressed(A_BUTTON) && *dialog != 0) {
+    *dialog = *dialog - 1;
+  } else if (arduboy.justPressed(B_BUTTON) && *dialog != maxDialog) {
+    *dialog = *dialog + 1;
   } else {
     return;
   }
 
-  if (display.dialog == Dialog::Title) {
+  if (*dialog == Dialog::Title) {
     display.titleFramesRemaining = TITLE_FRAMES;
     display.rollFramesRemaining = ROLL_FRAMES;
 
@@ -268,7 +262,7 @@ void loop() {
     );
   }
 
-  handleDialogNavigationEvents();
+  handleDialogNavigationEvents(&display.dialog);
 
   arduboy.display();
 }
