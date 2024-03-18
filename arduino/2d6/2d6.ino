@@ -23,6 +23,7 @@ struct SettingsState {
 
 struct DisplayState {
   Dialog dialog = Dialog::Title;
+  int8_t titleDieIndex = -1;
   uint8_t titleFramesRemaining = TITLE_FRAMES;
   uint8_t rollFramesRemaining = ROLL_FRAMES;
 } display;
@@ -91,7 +92,6 @@ void setup() {
   arduboy.setFrameRate(FRAMES_PER_SECOND);
 
   reset();
-  makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
 }
 
 uint8_t getDialogIndexWithSideEffects(
@@ -130,10 +130,9 @@ void handleDialogNavigationEvents(
   }
 
   if (*dialog == Dialog::Title) {
+    display.titleDieIndex = -1;
     display.titleFramesRemaining = TITLE_FRAMES;
     display.rollFramesRemaining = ROLL_FRAMES;
-
-    makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
   } else {
     makeNoise(arduboyTones, JUMP_TONES, settings.volume);
   }
@@ -170,12 +169,25 @@ void loop() {
     drawTitle(
       settings.dicePerRoll,
       settings.sidesPerDie,
+      display.titleDieIndex,
       display.rollFramesRemaining,
       arduboy, tinyfont
     );
 
     display.titleFramesRemaining =
       max(0, display.titleFramesRemaining - 1);
+
+    uint8_t framesElapsed = TITLE_FRAMES - display.titleFramesRemaining;
+
+    if (
+      framesElapsed == TITLE_ROLL_0_FRAME ||
+      framesElapsed == TITLE_ROLL_1_FRAME ||
+      framesElapsed == TITLE_ROLL_2_FRAME
+    ) {
+      display.rollFramesRemaining = ROLL_FRAMES;
+      display.titleDieIndex = display.titleDieIndex + 1;
+      makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
+    }
 
     if (display.titleFramesRemaining == 0) {
       display.dialog = display.dialog + 1;

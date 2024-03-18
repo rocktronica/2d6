@@ -22,6 +22,9 @@
 # define FRAMES_PER_SECOND  15
 # define ROLL_FRAMES        3
 # define TITLE_FRAMES       30
+# define TITLE_ROLL_0_FRAME 3
+# define TITLE_ROLL_1_FRAME 5
+# define TITLE_ROLL_2_FRAME 7
 
 enum Dialog {
   Title,
@@ -277,6 +280,7 @@ void drawTitle(
   uint8_t dicePerRoll,
   uint8_t sidesPerDie,
 
+  int8_t dieIndex,
   uint8_t framesRemaining,
 
   Arduboy2 arduboy,
@@ -292,7 +296,7 @@ void drawTitle(
   for (uint8_t i = 0; i < 3; i++) {
     uint8_t x = xOffset + (dieSize + GAP) * i;
 
-    if (framesRemaining > 0) {
+    if (dieIndex >= i && framesRemaining > 0) {
       drawRollingDie(
         x, y,
         framesRemaining,
@@ -303,7 +307,7 @@ void drawTitle(
     } else {
       drawDie(
         x, y,
-        dieValues[i],
+        dieIndex >= i ? dieValues[i] : "",
         arduboy, tinyfont,
         dieSize, false, OUTER_FILLET
       );
