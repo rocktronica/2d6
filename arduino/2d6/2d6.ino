@@ -24,8 +24,8 @@ struct SettingsState {
 struct DisplayState {
   Dialog dialog = Dialog::Title;
   int8_t titleDieIndex = -1;
-  uint8_t titleFramesRemaining = TITLE_FRAMES;
-  uint8_t rollFramesRemaining = ROLL_FRAMES;
+  int8_t titleFramesRemaining = TITLE_FRAMES;
+  int8_t rollFramesRemaining[MAX_DICE_PER_ROLL];
 } display;
 
 struct OperationState {
@@ -66,9 +66,11 @@ void roll(int count = 1) {
   }
 
   // Start animation only if idle
-  display.rollFramesRemaining = display.rollFramesRemaining > 0
-    ? display.rollFramesRemaining
-    : ROLL_FRAMES;
+  for (uint8_t i = 0; i < MAX_DICE_PER_ROLL; i++) {
+    display.rollFramesRemaining[i] = display.rollFramesRemaining[i] > 0
+      ? display.rollFramesRemaining[i]
+      : getRollFramesCount(ROLL_FRAMES);
+  }
 
   makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
 }
@@ -132,7 +134,6 @@ void handleDialogNavigationEvents(
   if (*dialog == Dialog::Title) {
     display.titleDieIndex = -1;
     display.titleFramesRemaining = TITLE_FRAMES;
-    display.rollFramesRemaining = ROLL_FRAMES;
   } else {
     makeNoise(arduboyTones, JUMP_TONES, settings.volume);
   }
@@ -154,6 +155,16 @@ void handleOperationEvents() {
   }
 }
 
+void handleTitleDieIncrementing(uint8_t targetFrame, uint8_t index) {
+  uint8_t framesElapsed = TITLE_FRAMES - display.titleFramesRemaining;
+
+  if (framesElapsed == targetFrame) {
+    display.rollFramesRemaining[index] = ROLL_FRAMES;
+    display.titleDieIndex = index;
+    makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
+  }
+}
+
 void loop() {
   if (!arduboy.nextFrame()) {
     return;
@@ -162,8 +173,9 @@ void loop() {
   arduboy.pollButtons();
   arduboy.clear();
 
-  display.rollFramesRemaining =
-    max(0, display.rollFramesRemaining - 1);
+  for (uint8_t i = 0; i < MAX_DICE_PER_ROLL; i++) {
+    display.rollFramesRemaining[i] = max(0, display.rollFramesRemaining[i] - 1);
+  }
 
   if (display.dialog == Dialog::Title) {
     drawTitle(
@@ -177,17 +189,9 @@ void loop() {
     display.titleFramesRemaining =
       max(0, display.titleFramesRemaining - 1);
 
-    uint8_t framesElapsed = TITLE_FRAMES - display.titleFramesRemaining;
-
-    if (
-      framesElapsed == TITLE_ROLL_0_FRAME ||
-      framesElapsed == TITLE_ROLL_1_FRAME ||
-      framesElapsed == TITLE_ROLL_2_FRAME
-    ) {
-      display.rollFramesRemaining = ROLL_FRAMES;
-      display.titleDieIndex = display.titleDieIndex + 1;
-      makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
-    }
+    handleTitleDieIncrementing(TITLE_ROLL_0_FRAME, 0);
+    handleTitleDieIncrementing(TITLE_ROLL_1_FRAME, 1);
+    handleTitleDieIncrementing(TITLE_ROLL_2_FRAME, 2);
 
     if (display.titleFramesRemaining == 0) {
       display.dialog = display.dialog + 1;
@@ -205,6 +209,7 @@ void loop() {
       settings.volume, Volume::High, Volume::Mute
     );
 
+    // TODO: change on leave, regardless of direction
     if (arduboy.justPressed(B_BUTTON)) {
       arduboyTones.volumeMode(
         settings.volume == Volume::High

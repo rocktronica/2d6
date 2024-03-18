@@ -23,8 +23,8 @@
 # define ROLL_FRAMES        3
 # define TITLE_FRAMES       30
 # define TITLE_ROLL_0_FRAME 3
-# define TITLE_ROLL_1_FRAME 5
-# define TITLE_ROLL_2_FRAME 7
+# define TITLE_ROLL_1_FRAME 4
+# define TITLE_ROLL_2_FRAME 6
 
 enum Dialog {
   Title,
@@ -245,7 +245,7 @@ void drawRollingDie(
   int8_t x,
   int8_t y,
 
-  uint8_t framesRemaining,
+  int8_t framesRemaining,
   bool clockwise,
 
   Arduboy2 arduboy,
@@ -280,8 +280,8 @@ void drawTitle(
   uint8_t dicePerRoll,
   uint8_t sidesPerDie,
 
-  int8_t dieIndex,
-  uint8_t framesRemaining,
+  int8_t dieIndex, // TODO: obviate
+  int8_t framesRemaining[],
 
   Arduboy2 arduboy,
   Tinyfont tinyfont
@@ -296,10 +296,10 @@ void drawTitle(
   for (uint8_t i = 0; i < 3; i++) {
     uint8_t x = xOffset + (dieSize + GAP) * i;
 
-    if (dieIndex >= i && framesRemaining > 0) {
+    if (dieIndex >= i && framesRemaining[i] > 0) {
       drawRollingDie(
         x, y,
-        framesRemaining,
+        framesRemaining[i],
         i % 2 == 0,
         arduboy, tinyfont,
         dieSize, 180
@@ -344,7 +344,7 @@ void drawSidebar(
   uint8_t maxValue,
   String text,
 
-  uint8_t framesRemaining,
+  int8_t framesRemaining[],
 
   Arduboy2 arduboy,
   Tinyfont tinyfont,
@@ -370,17 +370,11 @@ void drawSidebar(
     uint8_t diceY = y + FRAME + FRAME_GAP
       + floor(i / diceColumns) * (DIE_SIZE + GAP);
 
-    // TODO: extract
-    // CONSIDER: randomize on animation start; clockwise too
-    uint8_t dieFramesRemaining = (i == 2 || i == 3)
-      ? max(0, framesRemaining - 1)
-      : framesRemaining;
-
-    if (dieFramesRemaining > 0) {
+    if (framesRemaining[i] > 0) {
       drawRollingDie(
         diceX, diceY,
-        dieFramesRemaining,
-        i % 2 == 0,
+        framesRemaining[i],
+        i % 2 == 0, // TODO: pass as arg
         arduboy, tinyfont
       );
     } else {
