@@ -23,7 +23,8 @@ struct SettingsState {
 
 struct DisplayState {
   Dialog dialog = Dialog::Title;
-  uint8_t framesRemaining = ROLL_FRAMES;
+  uint8_t titleFramesRemaining = TITLE_FRAMES;
+  uint8_t rollFramesRemaining = ROLL_FRAMES;
 } display;
 
 struct OperationState {
@@ -64,8 +65,8 @@ void roll(int count = 1) {
   }
 
   // Start animation only if idle
-  display.framesRemaining = display.framesRemaining > 0
-    ? display.framesRemaining
+  display.rollFramesRemaining = display.rollFramesRemaining > 0
+    ? display.rollFramesRemaining
     : ROLL_FRAMES;
 
   makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
@@ -87,7 +88,7 @@ void setup() {
   arduboy.beginDoFirst();
   arduboy.waitNoButtons();
 
-  arduboy.setFrameRate(15);
+  arduboy.setFrameRate(FRAMES_PER_SECOND);
 
   reset();
   makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
@@ -116,6 +117,7 @@ uint8_t getDialogIndexWithSideEffects(
     : min(initialIndex + 1, maxIndex);
 }
 
+// TODO: dialog as pointer?
 void handleDialogNavigationEvents(
   Dialog maxDialog = Dialog::Operation
 ) {
@@ -133,7 +135,14 @@ void handleDialogNavigationEvents(
     return;
   }
 
-  makeNoise(arduboyTones, JUMP_TONES, settings.volume);
+  if (display.dialog == Dialog::Title) {
+    display.titleFramesRemaining = TITLE_FRAMES;
+    display.rollFramesRemaining = ROLL_FRAMES;
+
+    makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
+  } else {
+    makeNoise(arduboyTones, JUMP_TONES, settings.volume);
+  }
 }
 
 void handleOperationEvents() {
@@ -160,16 +169,23 @@ void loop() {
   arduboy.pollButtons();
   arduboy.clear();
 
-  display.framesRemaining =
-    max(0, display.framesRemaining - 1);
+  display.rollFramesRemaining =
+    max(0, display.rollFramesRemaining - 1);
 
   if (display.dialog == Dialog::Title) {
     drawTitle(
       settings.dicePerRoll,
       settings.sidesPerDie,
-      display.framesRemaining,
+      display.rollFramesRemaining,
       arduboy, tinyfont
     );
+
+    display.titleFramesRemaining =
+      max(0, display.titleFramesRemaining - 1);
+
+    if (display.titleFramesRemaining == 0) {
+      display.dialog = display.dialog + 1;
+    }
   } else if (display.dialog == Dialog::SetSound) {
     const String options[3] = { "HIGH", "LOW", "NONE" };
 
@@ -237,7 +253,7 @@ void loop() {
         : "?")
       + "\n\nCOUNT:\n" + String(operation.rollsCount),
 
-      display.framesRemaining,
+      display.rollFramesRemaining,
 
       arduboy, tinyfont
     );
