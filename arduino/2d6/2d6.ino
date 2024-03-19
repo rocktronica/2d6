@@ -5,7 +5,7 @@
 #include "noise.h"
 
 # define DEFAULT_DICE_PER_ROLL  2
-# define MAX_DICE_PER_ROLL  6
+# define MAX_DICE_PER_ROLL  12
 
 # define DEFAULT_SIDES_PER_DIE  6
 # define MAX_SIDES_PER_DIE  20
@@ -222,30 +222,30 @@ void loop() {
       );
     }
   } else if (display.dialog == Dialog::SetDicePerRoll) {
-    const uint8_t options[6] = { 1, 2, 3, 4, 5, 6 };
+    const uint8_t options[8] = { 1, 2, 3, 4, 5, 6, 9, MAX_DICE_PER_ROLL };
 
     drawDialog(
       "DICE",
-      options, 6, getIndexOfValue(settings.dicePerRoll, options, 6),
+      options, 8, getIndexOfValue(settings.dicePerRoll, options, 8),
       arduboy, tinyfont
     );
 
     settings.dicePerRoll = options[getDialogIndexWithSideEffects(
-      getIndexOfValue(settings.dicePerRoll, options, 6),
-      0, 6 - 1
+      getIndexOfValue(settings.dicePerRoll, options, 8),
+      0, 8 - 1
     )];
   } else if (display.dialog == Dialog::SetSidesPerDie) {
-    const uint8_t options[6] = { 4, 6, 8, 10, 12, 20 }; // TODO: 2
+    const uint8_t options[7] = { 2, 4, 6, 8, 10, 12, MAX_SIDES_PER_DIE };
 
     drawDialog(
       "SIDES",
-      options, 6, getIndexOfValue(settings.sidesPerDie, options, 6),
+      options, 7, getIndexOfValue(settings.sidesPerDie, options, 7),
       arduboy, tinyfont
     );
 
     settings.sidesPerDie = options[getDialogIndexWithSideEffects(
-      getIndexOfValue(settings.sidesPerDie, options, 6),
-      0, 6 - 1
+      getIndexOfValue(settings.sidesPerDie, options, 7),
+      0, 7 - 1
     )];
   } else if (display.dialog == Operation) {
     handleOperationEvents();
