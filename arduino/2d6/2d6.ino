@@ -248,10 +248,6 @@ void loop() {
       0, 6 - 1
     )];
   } else if (display.dialog == Operation) {
-    if (arduboy.justPressed(A_BUTTON)) {
-      reset(); // TODO: hold to reset w/ dialog
-    }
-
     handleOperationEvents();
 
     drawSidebar(
@@ -282,6 +278,10 @@ void loop() {
       getUniqueSumsCount(),
       arduboy
     );
+
+    if (arduboy.justPressed(A_BUTTON)) {
+      reset(); // TODO: hold to reset w/ dialog
+    }
   }
 
   handleDialogNavigationEvents(&display.dialog);
