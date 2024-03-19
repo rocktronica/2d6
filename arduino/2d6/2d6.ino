@@ -25,10 +25,14 @@ struct SettingsState {
 
 struct DisplayState {
   Dialog dialog = Dialog::Title;
+
   int8_t titleDieIndex = -1;
   int8_t titleFramesRemaining = TITLE_FRAMES;
+
   int8_t rollFramesRemaining[MAX_DICE_PER_ROLL];
   bool rollClockwise[MAX_DICE_PER_ROLL];
+
+  int8_t framesRollButtonHeld = 0;
 } display;
 
 struct OperationState {
@@ -155,10 +159,16 @@ void handleOperationEvents() {
     roll();
   }
 
+  if (arduboy.pressed(B_BUTTON)) {
+    display.framesRollButtonHeld =
+      min(FRAMES_PER_SECOND, display.framesRollButtonHeld + 1);
+  } else {
+    display.framesRollButtonHeld = 0;
+  }
+
   if (
     arduboy.pressed(B_BUTTON) &&
-    operation.rollsCount > 0
-    // TODO: and held for N frames
+    display.framesRollButtonHeld >= FRAMES_PER_SECOND
   ) {
     roll(arduboy.pressed(UP_BUTTON) ? 10 : 1);
   }
