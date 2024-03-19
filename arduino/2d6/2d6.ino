@@ -213,8 +213,7 @@ void loop() {
       settings.volume, Volume::High, Volume::Mute
     );
 
-    // TODO: change on leave, regardless of direction
-    if (arduboy.justPressed(B_BUTTON)) {
+    if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) {
       arduboyTones.volumeMode(
         settings.volume == Volume::High
           ? VOLUME_ALWAYS_HIGH
