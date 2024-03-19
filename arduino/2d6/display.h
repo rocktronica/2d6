@@ -78,7 +78,14 @@ void drawPanel(
   Arduboy2 arduboy,
   Tinyfont tinyfont
 ) {
-  arduboy.fillRoundRect(x, y, width, height, OUTER_FILLET, BLACK);
+  arduboy.fillRoundRect(
+    x - 1,
+    y - 1,
+    width + 2,
+    height + 2,
+    OUTER_FILLET,
+    BLACK
+  );
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
   arduboy.drawFastHLine(x, y + DIE_CHAR_SMALL + FRAME + GAP + GAP, width);
