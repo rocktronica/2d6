@@ -26,6 +26,7 @@ struct DisplayState {
   int8_t titleDieIndex = -1;
   int8_t titleFramesRemaining = TITLE_FRAMES;
   int8_t rollFramesRemaining[MAX_DICE_PER_ROLL];
+  bool rollClockwise[MAX_DICE_PER_ROLL];
 } display;
 
 struct OperationState {
@@ -65,11 +66,12 @@ void roll(int count = 1) {
     operation.rollsCount += 1;
   }
 
-  // Start animation only if idle
   for (uint8_t i = 0; i < MAX_DICE_PER_ROLL; i++) {
-    display.rollFramesRemaining[i] = display.rollFramesRemaining[i] > 0
-      ? display.rollFramesRemaining[i]
-      : getRollFramesCount(ROLL_FRAMES);
+    // Start new animations only if idle
+    if (display.rollFramesRemaining[i] == 0) {
+      display.rollFramesRemaining[i] = getRollFramesCount(ROLL_FRAMES);
+      display.rollClockwise[i] = random(0, 2) == 0;
+    }
   }
 
   makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
@@ -160,6 +162,7 @@ void handleTitleDieIncrementing(uint8_t targetFrame, uint8_t index) {
 
   if (framesElapsed == targetFrame) {
     display.rollFramesRemaining[index] = ROLL_FRAMES;
+    display.rollClockwise[index] = random(0, 2) == 0;
     display.titleDieIndex = index;
     makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
   }
@@ -183,6 +186,7 @@ void loop() {
       settings.sidesPerDie,
       display.titleDieIndex,
       display.rollFramesRemaining,
+      display.rollClockwise,
       arduboy, tinyfont
     );
 
@@ -265,6 +269,7 @@ void loop() {
       + "\n\nCOUNT:\n" + String(operation.rollsCount),
 
       display.rollFramesRemaining,
+      display.rollClockwise,
 
       arduboy, tinyfont
     );

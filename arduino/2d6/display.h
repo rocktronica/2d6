@@ -282,6 +282,7 @@ void drawTitle(
 
   int8_t dieIndex, // TODO: obviate
   int8_t framesRemaining[],
+  bool rollClockwise[],
 
   Arduboy2 arduboy,
   Tinyfont tinyfont
@@ -300,7 +301,7 @@ void drawTitle(
       drawRollingDie(
         x, y,
         framesRemaining[i],
-        i % 2 == 0,
+        rollClockwise[i],
         arduboy, tinyfont,
         dieSize, 180
       );
@@ -345,6 +346,7 @@ void drawSidebar(
   String text,
 
   int8_t framesRemaining[],
+  bool rollClockwise[],
 
   Arduboy2 arduboy,
   Tinyfont tinyfont,
@@ -374,7 +376,7 @@ void drawSidebar(
       drawRollingDie(
         diceX, diceY,
         framesRemaining[i],
-        i % 2 == 0, // TODO: pass as arg
+        rollClockwise[i],
         arduboy, tinyfont
       );
     } else {
