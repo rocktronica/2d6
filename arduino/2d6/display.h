@@ -19,12 +19,12 @@
 # define DIE_CHAR_HEIGHT    7    // Default Arduboy font
 # define DIE_CHAR_SMALL     4    // TinyFont 4x4
 
-# define FRAMES_PER_SECOND  15
-# define ROLL_FRAMES        3
-# define TITLE_FRAMES       30
-# define TITLE_ROLL_0_FRAME 3
-# define TITLE_ROLL_1_FRAME 4
-# define TITLE_ROLL_2_FRAME 6
+# define FRAMES_PER_SECOND  30
+# define ROLL_FRAMES        6
+# define TITLE_FRAMES       60
+# define TITLE_ROLL_0_FRAME 6
+# define TITLE_ROLL_1_FRAME 8
+# define TITLE_ROLL_2_FRAME 12
 
 enum Dialog {
   Title,
