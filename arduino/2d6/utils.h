@@ -90,7 +90,6 @@ int8_t getIndexOfValue(
   return -1;
 }
 
-// TODO: try negative value for clockwise
 int8_t getRollFramesCount(int8_t defaultValue, int8_t variance = 2) {
   return random(defaultValue - variance, defaultValue + variance + 1);
 }
