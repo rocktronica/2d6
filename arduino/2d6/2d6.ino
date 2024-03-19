@@ -4,11 +4,13 @@
 #include "display.h"
 #include "noise.h"
 
+# define MAX_COUNT              1000
+
 # define DEFAULT_DICE_PER_ROLL  2
-# define MAX_DICE_PER_ROLL  12
+# define MAX_DICE_PER_ROLL      12
 
 # define DEFAULT_SIDES_PER_DIE  6
-# define MAX_SIDES_PER_DIE  20
+# define MAX_SIDES_PER_DIE      20
 
 Arduboy2 arduboy;
 ArduboyTones arduboyTones(arduboy.audio.enabled);
@@ -31,8 +33,8 @@ struct DisplayState {
 
 struct OperationState {
   uint8_t currentRollValues[MAX_DICE_PER_ROLL];
-  int sumCounts[MAX_DICE_PER_ROLL * MAX_SIDES_PER_DIE];
-  int rollsCount;
+  uint16_t sumCounts[MAX_DICE_PER_ROLL * MAX_SIDES_PER_DIE];
+  uint16_t rollsCount;
   uint32_t totalSum;
 } operation;
 
@@ -49,7 +51,11 @@ uint8_t getUniqueSumsCount() {
 }
 
 void roll(int count = 1) {
-  while (count > 0) {
+  if (operation.rollsCount >= MAX_COUNT) {
+    return;
+  }
+
+  while (count > 0 && operation.rollsCount < MAX_COUNT) {
     for (uint8_t i = 0; i < settings.dicePerRoll; i++) {
       operation.currentRollValues[i] =
         random(1, settings.sidesPerDie + 1);
@@ -152,6 +158,7 @@ void handleOperationEvents() {
   if (
     arduboy.pressed(B_BUTTON) &&
     operation.rollsCount > 0
+    // TODO: and held for N frames
   ) {
     roll(arduboy.pressed(UP_BUTTON) ? 10 : 1);
   }
@@ -280,6 +287,10 @@ void loop() {
 
     if (arduboy.justPressed(A_BUTTON)) {
       reset(); // TODO: hold to reset w/ dialog
+    }
+
+    if (operation.rollsCount >= MAX_COUNT) {
+      drawLimitErrorPanel(arduboy, tinyfont);
     }
   }
 

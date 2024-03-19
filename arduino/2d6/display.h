@@ -26,6 +26,8 @@
 # define TITLE_ROLL_1_FRAME 8
 # define TITLE_ROLL_2_FRAME 12
 
+// TODO: extract stuff to utils
+
 enum Dialog {
   Title,
   SetSound,
@@ -56,7 +58,7 @@ String getPrettyAverage(uint32_t total, int size) {
   return response;
 }
 
-int getMaxValue(int values[], uint8_t size) {
+uint16_t getMaxValue(uint16_t values[], uint8_t size) {
   int maxValue = 0;
 
   for (uint8_t i = 0; i < size; i++) {
@@ -64,6 +66,19 @@ int getMaxValue(int values[], uint8_t size) {
   }
 
   return maxValue;
+}
+
+Xy getPanelTextXy(
+  uint8_t panelWidth,
+  uint8_t panelHeight,
+  uint8_t lineIndex = 0
+) {
+  return {
+    x: (WIDTH - panelWidth) / 2 + (FRAME + DIALOG_GAP),
+    y: (HEIGHT - panelHeight) / 2 + FRAME * 2 + GAP * 2
+      + DIE_CHAR_SMALL + DIALOG_GAP
+      + (DIE_CHAR_SMALL + GAP) * lineIndex
+  };
 }
 
 void drawPanel(
@@ -97,6 +112,29 @@ void drawPanel(
   tinyfont.print(title);
 }
 
+void drawLimitErrorPanel(
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  // TODO: derive
+  uint8_t width = 43;
+  uint8_t height = 25;
+
+  drawPanel(
+    (WIDTH - width) / 2, (HEIGHT - height) / 2,
+    width, height,
+    "ERROR",
+    arduboy, tinyfont
+  );
+
+  String lines[] = { "LIMIT", "REACHED" };
+  for (uint8_t i = 0; i < 2; i++) {
+    Xy xy = getPanelTextXy(width, height, i);
+    tinyfont.setCursor(xy.x, xy.y);
+    tinyfont.print(lines[i]);
+  }
+}
+
 void drawDialog(
   uint8_t width,
   uint8_t height,
@@ -118,12 +156,8 @@ void drawDialog(
   );
 
   for (uint8_t i = 0; i < optionsSize; i++) {
-    tinyfont.setCursor(
-      (WIDTH - width) / 2 + (FRAME + DIALOG_GAP),
-      (HEIGHT - height) / 2 + FRAME * 2 + GAP * 2
-        + DIE_CHAR_SMALL + DIALOG_GAP
-        + (DIE_CHAR_SMALL + GAP) * i
-    );
+    Xy xy = getPanelTextXy(width, height, i);
+    tinyfont.setCursor(xy.x, xy.y);
     tinyfont.print(
       (selectedOptionIndex == i ? ">" : " ") + options[i]
     );
@@ -433,7 +467,7 @@ void drawGraph(
   uint8_t x,
   uint8_t y,
 
-  int sumCounts[],
+  uint16_t sumCounts[],
   uint8_t minSum,
   uint8_t maxSum,
   uint8_t barsCount,
@@ -446,7 +480,7 @@ void drawGraph(
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
   uint8_t barWidth = getIdealGraphBarWidth(width, barsCount);
-  int maxCount = getMaxValue(sumCounts, barsCount);
+  uint16_t maxCount = getMaxValue(sumCounts, barsCount);
 
   const uint8_t xOffset = (width - getIdealGraphWidth(width, barsCount)) / 2;
 
