@@ -393,13 +393,17 @@ void drawSidebar(
       + DIE_SIZE * diceRows + GAP * (diceRows - 1)
       + FRAME_GAP;
 
-  arduboy.drawFastHLine(x, lineY, width);
+  // TinyFont breaks if asked to render off-screen
+  // TODO: design away hack
+  if (lineY <= HEIGHT - 10) {
+    arduboy.drawFastHLine(x, lineY, width);
 
-  tinyfont.setCursor(
-    x + FRAME + FRAME_GAP,
-    lineY + FRAME + FRAME_GAP
-  );
-  tinyfont.print(text);
+    tinyfont.setCursor(
+      x + FRAME + FRAME_GAP,
+      lineY + FRAME + FRAME_GAP
+    );
+    tinyfont.print(text);
+  }
 }
 
 uint8_t getIdealGraphBarWidth(

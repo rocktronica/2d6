@@ -235,7 +235,7 @@ void loop() {
       0, 6 - 1
     )];
   } else if (display.dialog == Dialog::SetSidesPerDie) {
-    const uint8_t options[6] = { 4, 6, 8, 10, 12, 20 };
+    const uint8_t options[6] = { 4, 6, 8, 10, 12, 20 }; // TODO: 2
 
     drawDialog(
       "SIDES",
