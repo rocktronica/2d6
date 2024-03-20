@@ -358,7 +358,7 @@ void loop() {
       makeNoise(arduboyTones, CROUCH_TONES, settings.volume);
     }
 
-    if (operation.rollsCount >= MAX_COUNT) {
+    if (arduboy.pressed(B_BUTTON) && operation.rollsCount >= MAX_COUNT) {
       drawLimitErrorPanel(arduboy, tinyfont);
     }
   }
