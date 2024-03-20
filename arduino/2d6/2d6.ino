@@ -84,7 +84,12 @@ void roll(int count = 1) {
     }
   }
 
-  makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
+  if (
+    display.framesRollButtonHeld == 0 ||
+    arduboy.everyXFrames(ROLL_FRAMES)
+  ) {
+    makeNoise(arduboyTones, CHANGE_TONES, settings.volume);
+  }
 }
 
 void reset() {
