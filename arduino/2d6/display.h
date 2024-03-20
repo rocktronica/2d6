@@ -25,6 +25,7 @@
 # define TITLE_ROLL_0_FRAME 6
 # define TITLE_ROLL_1_FRAME 8
 # define TITLE_ROLL_2_FRAME 12
+# define DECONSTRUCT_FRAMES 15
 
 // TODO: extract stuff to utils
 

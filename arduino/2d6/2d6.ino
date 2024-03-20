@@ -32,6 +32,8 @@ struct DisplayState {
   int8_t rollFramesRemaining[MAX_DICE_PER_ROLL];
   bool rollClockwise[MAX_DICE_PER_ROLL];
 
+  int8_t deconstructFramesRemaining = 0;
+
   int8_t framesRollButtonHeld = 0;
   int8_t framesBackButtonHeld = 0;
 } display;
@@ -53,6 +55,16 @@ uint8_t getMaxSum() {
 
 uint8_t getUniqueSumsCount() {
   return getMaxSum() - getMinSum() + 1;
+}
+
+void startDiceRollAnimations() {
+  for (uint8_t i = 0; i < MAX_DICE_PER_ROLL; i++) {
+    // Start new animations only if idle
+    if (display.rollFramesRemaining[i] == 0) {
+      display.rollFramesRemaining[i] = getRollFramesCount(ROLL_FRAMES);
+      display.rollClockwise[i] = random(0, 2) == 0;
+    }
+  }
 }
 
 void roll(int count = 1) {
@@ -77,13 +89,7 @@ void roll(int count = 1) {
     operation.rollsCount += 1;
   }
 
-  for (uint8_t i = 0; i < MAX_DICE_PER_ROLL; i++) {
-    // Start new animations only if idle
-    if (display.rollFramesRemaining[i] == 0) {
-      display.rollFramesRemaining[i] = getRollFramesCount(ROLL_FRAMES);
-      display.rollClockwise[i] = random(0, 2) == 0;
-    }
-  }
+  startDiceRollAnimations();
 
   if (
     display.framesRollButtonHeld == 0 ||
@@ -103,6 +109,15 @@ void resetOperation() {
 
   operation.rollsCount = 0;
   operation.totalSum = 0;
+}
+
+void deconstructOperation() {
+  for (uint8_t i = 0; i < getUniqueSumsCount(); i++) {
+    operation.sumCounts[i] = float(operation.sumCounts[i]) * .8;
+  }
+
+  operation.rollsCount = float(operation.rollsCount) * .8;
+  operation.totalSum = float(operation.totalSum) * .8;
 }
 
 void resetSystem() {
@@ -172,6 +187,17 @@ void handleDialogNavigationEvents(Dialog* dialog) {
 }
 
 void handleOperationEvents() {
+  if (display.deconstructFramesRemaining > 0) {
+    deconstructOperation();
+    display.deconstructFramesRemaining =
+      max(0, display.deconstructFramesRemaining - 1);
+
+    if (display.deconstructFramesRemaining == 0) {
+      resetOperation();
+    }
+    return;
+  }
+
   if (arduboy.justPressed(B_BUTTON)) {
     if (operation.rollsCount == 0) {
         arduboy.initRandomSeed();
@@ -327,7 +353,9 @@ void loop() {
     }
 
     if (arduboy.justPressed(A_BUTTON)) {
-      resetOperation();
+      startDiceRollAnimations();
+      display.deconstructFramesRemaining = DECONSTRUCT_FRAMES;
+      makeNoise(arduboyTones, CROUCH_TONES, settings.volume);
     }
 
     if (operation.rollsCount >= MAX_COUNT) {

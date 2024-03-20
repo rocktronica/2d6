@@ -20,6 +20,11 @@ const uint16_t JUMP_TONES[] PROGMEM = {
  TONES_END
 };
 
+const uint16_t CROUCH_TONES[] PROGMEM = {
+ NOTE_E3,34, NOTE_F3,34, NOTE_G3,34, NOTE_F3,34, 
+ TONES_END
+};
+
 void makeNoise(
   ArduboyTones arduboyTones,
   uint16_t sequence[],
