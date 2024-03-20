@@ -24,7 +24,7 @@ struct SettingsState {
 } settings;
 
 struct DisplayState {
-  Dialog dialog = Dialog::Title;
+  Stage stage = Stage::Title;
 
   int8_t titleDieIndex = -1;
   int8_t titleFramesRemaining = TITLE_FRAMES;
@@ -36,6 +36,9 @@ struct DisplayState {
 
   int8_t framesRollButtonHeld = 0;
   int8_t framesBackButtonHeld = 0;
+
+  int8_t scroll = 0;
+  Direction scrollDirection = Direction::None;
 } display;
 
 struct OperationState {
@@ -130,7 +133,7 @@ void resetSystem() {
   settings.sidesPerDie = DEFAULT_SIDES_PER_DIE;
   settings.volume = Volume::Low;
 
-  display.dialog = Dialog::Title;
+  display.stage = Stage::Title;
   display.titleDieIndex = -1;
   display.titleFramesRemaining = TITLE_FRAMES;
   display.framesRollButtonHeld = 0;
@@ -171,24 +174,29 @@ uint8_t getDialogIndexWithSideEffects(
     : min(initialIndex + 1, maxIndex);
 }
 
-void handleDialogNavigationEvents(Dialog* dialog) {
-  if (*dialog == Dialog::Operation && operation.rollsCount > 0) {
+void handleStageNavigationEvents(Stage* stage) {
+  if (*stage == Stage::Operation && operation.rollsCount > 0) {
     return;
   }
 
-  if (arduboy.justPressed(A_BUTTON) && *dialog != 0) {
-    *dialog = *dialog - 1;
-  } else if (arduboy.justPressed(B_BUTTON) && *dialog != Dialog::Operation) {
-    *dialog = *dialog + 1;
+  if (arduboy.justPressed(A_BUTTON) && *stage != 0) {
+    *stage = *stage - 1;
+  } else if (arduboy.justPressed(B_BUTTON) && *stage != Stage::Operation) {
+    *stage = *stage + 1;
   } else {
     return;
   }
 
-  if (*dialog == Dialog::Title) {
+  if (*stage == Stage::Title) {
     resetSystem();
   } else {
     makeNoise(arduboyTones, JUMP_TONES, settings.volume);
   }
+}
+
+void setScroll(Direction direction) {
+  display.scrollDirection = direction;
+  makeNoise(arduboyTones, MOVE_TONES, settings.volume);
 }
 
 void handleOperationEvents() {
@@ -223,7 +231,27 @@ void handleOperationEvents() {
     arduboy.pressed(B_BUTTON) &&
     display.framesRollButtonHeld >= FRAMES_PER_SECOND
   ) {
-    roll(arduboy.pressed(UP_BUTTON) ? 10 : 1);
+    roll(arduboy.pressed(RIGHT_BUTTON) ? 10 : 1);
+  }
+
+  if (arduboy.justPressed(UP_BUTTON)) {
+    setScroll(Direction::Up);
+  } else if (arduboy.justPressed(DOWN_BUTTON)) {
+    setScroll(Direction::Down);
+  }
+
+  if (display.scrollDirection == Direction::Up) {
+    display.scroll += (HEIGHT / SCROLL_FRAMES);
+  } else if (display.scrollDirection == Direction::Down) {
+    display.scroll -= (HEIGHT / SCROLL_FRAMES);
+  }
+
+  if (display.scroll <= DEBUG_PANEL_Y) {
+    display.scrollDirection = None;
+    display.scroll = DEBUG_PANEL_Y;
+  } else if (display.scroll >= GRAPH_PANEL_Y) {
+    display.scrollDirection = None;
+    display.scroll = 0;
   }
 }
 
@@ -250,7 +278,7 @@ void loop() {
     display.rollFramesRemaining[i] = max(0, display.rollFramesRemaining[i] - 1);
   }
 
-  if (display.dialog == Dialog::Title) {
+  if (display.stage == Stage::Title) {
     drawTitle(
       settings.dicePerRoll,
       settings.sidesPerDie,
@@ -268,9 +296,9 @@ void loop() {
     handleTitleDieIncrementing(TITLE_ROLL_2_FRAME, 2);
 
     if (display.titleFramesRemaining == 0) {
-      display.dialog = display.dialog + 1;
+      display.stage = display.stage + 1;
     }
-  } else if (display.dialog == Dialog::SetSound) {
+  } else if (display.stage == Stage::SetSound) {
     const String options[3] = { "HIGH", "LOW", "NONE" };
 
     drawDialog(
@@ -290,8 +318,7 @@ void loop() {
           : VOLUME_ALWAYS_NORMAL
       );
     }
-  } else if (display.dialog == Dialog::SetDicePerRoll) {
-    // TODO: uhhhh, does 9 crash?
+  } else if (display.stage == Stage::SetDicePerRoll) {
     const uint8_t options[8] = { 1, 2, 3, 4, 5, 6, 9, MAX_DICE_PER_ROLL };
 
     drawDialog(
@@ -304,7 +331,7 @@ void loop() {
       getIndexOfValue(settings.dicePerRoll, options, 8),
       0, 8 - 1
     )];
-  } else if (display.dialog == Dialog::SetSidesPerDie) {
+  } else if (display.stage == Stage::SetSidesPerDie) {
     const uint8_t options[7] = { 2, 4, 6, 8, 10, 12, MAX_SIDES_PER_DIE };
 
     drawDialog(
@@ -317,22 +344,13 @@ void loop() {
       getIndexOfValue(settings.sidesPerDie, options, 7),
       0, 7 - 1
     )];
-  } else if (display.dialog == Operation) {
+  } else if (display.stage == Operation) {
     handleOperationEvents();
 
-    drawSidebar(
-      0, 0,
-
+    drawRollPanel(
       operation.currentRollValues,
       settings.dicePerRoll,
       settings.sidesPerDie,
-
-      + "NOW:" + String(getSum(operation.currentRollValues,
-        settings.dicePerRoll))
-      + "\nAVG:" + (operation.rollsCount > 0 ?
-        getPrettyAverage(operation.totalSum, operation.rollsCount)
-        : "?")
-      + "\n\nCOUNT:\n" + String(operation.rollsCount),
 
       display.rollFramesRemaining,
       display.rollClockwise,
@@ -340,14 +358,28 @@ void loop() {
       arduboy, tinyfont
     );
 
-    drawGraph(
-      WIDTH - GRAPH_WIDTH, 0,
-      operation.sumCounts,
-      getMinSum(),
-      getMaxSum(),
-      getUniqueSumsCount(),
-      arduboy
-    );
+    if (display.scroll > DEBUG_PANEL_Y) {
+      drawGraphPanel(
+        WIDTH - GRAPH_WIDTH, display.scroll,
+        operation.sumCounts,
+        getUniqueSumsCount(),
+        arduboy, tinyfont
+      );
+    }
+
+    if (display.scroll < GRAPH_PANEL_Y) {
+      drawDebugPanel(
+        WIDTH - GRAPH_WIDTH, display.scroll + HEIGHT + GAP,
+        operation.sumCounts,
+        getUniqueSumsCount(),
+        getMinSum(),
+        operation.rollsCount,
+        operation.totalSum,
+        arduboy, tinyfont
+      );
+    }
+
+    // TODO: move these into handler above
 
     if (arduboy.pressed(A_BUTTON)) {
       display.framesBackButtonHeld =
@@ -371,7 +403,7 @@ void loop() {
     }
   }
 
-  handleDialogNavigationEvents(&display.dialog);
+  handleStageNavigationEvents(&display.stage);
 
   arduboy.display();
 }

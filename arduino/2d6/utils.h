@@ -112,6 +112,10 @@ uint8_t getSum(uint8_t values[], uint8_t size) {
 }
 
 String getPrettyAverage(uint32_t total, int size) {
+  if (size == 0) {
+    return "?";
+  }
+
   char response[4];
   dtostrf(float(total) / size, -4, 1, response);
   return response;
