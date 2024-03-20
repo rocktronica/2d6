@@ -33,6 +33,7 @@ struct DisplayState {
   bool rollClockwise[MAX_DICE_PER_ROLL];
 
   int8_t framesRollButtonHeld = 0;
+  int8_t framesBackButtonHeld = 0;
 } display;
 
 struct OperationState {
@@ -92,7 +93,7 @@ void roll(int count = 1) {
   }
 }
 
-void reset() {
+void resetOperation() {
   for (uint8_t i = 0; i < settings.dicePerRoll; i++) {
     operation.currentRollValues[i] = 0;
   }
@@ -104,13 +105,27 @@ void reset() {
   operation.totalSum = 0;
 }
 
+void resetSystem() {
+  settings.dicePerRoll = DEFAULT_DICE_PER_ROLL;
+  settings.sidesPerDie = DEFAULT_SIDES_PER_DIE;
+  settings.volume = Volume::Low;
+
+  display.dialog = Dialog::Title;
+  display.titleDieIndex = -1;
+  display.titleFramesRemaining = TITLE_FRAMES;
+  display.framesRollButtonHeld = 0;
+  display.framesBackButtonHeld = 0;
+
+  resetOperation();
+}
+
 void setup() {
   arduboy.beginDoFirst();
   arduboy.waitNoButtons();
 
   arduboy.setFrameRate(FRAMES_PER_SECOND);
 
-  reset();
+  resetOperation();
 }
 
 uint8_t getDialogIndexWithSideEffects(
@@ -136,21 +151,21 @@ uint8_t getDialogIndexWithSideEffects(
     : min(initialIndex + 1, maxIndex);
 }
 
-void handleDialogNavigationEvents(
-  Dialog* dialog,
-  Dialog maxDialog = Dialog::Operation
-) {
+void handleDialogNavigationEvents(Dialog* dialog) {
+  if (*dialog == Dialog::Operation) {
+    return;
+  }
+
   if (arduboy.justPressed(A_BUTTON) && *dialog != 0) {
     *dialog = *dialog - 1;
-  } else if (arduboy.justPressed(B_BUTTON) && *dialog != maxDialog) {
+  } else if (arduboy.justPressed(B_BUTTON) && *dialog != Dialog::Operation) {
     *dialog = *dialog + 1;
   } else {
     return;
   }
 
   if (*dialog == Dialog::Title) {
-    display.titleDieIndex = -1;
-    display.titleFramesRemaining = TITLE_FRAMES;
+    resetSystem();
   } else {
     makeNoise(arduboyTones, JUMP_TONES, settings.volume);
   }
@@ -300,8 +315,19 @@ void loop() {
       arduboy
     );
 
+    if (arduboy.pressed(A_BUTTON)) {
+      display.framesBackButtonHeld =
+        min(FRAMES_PER_SECOND, display.framesBackButtonHeld + 1);
+
+      if (display.framesBackButtonHeld >= FRAMES_PER_SECOND) {
+        resetSystem();
+      }
+    } else {
+      display.framesBackButtonHeld = 0;
+    }
+
     if (arduboy.justPressed(A_BUTTON)) {
-      reset(); // TODO: hold to reset w/ dialog
+      resetOperation();
     }
 
     if (operation.rollsCount >= MAX_COUNT) {
