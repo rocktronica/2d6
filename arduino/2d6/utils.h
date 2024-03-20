@@ -94,4 +94,30 @@ int8_t getRollFramesCount(int8_t defaultValue, int8_t variance = 2) {
   return random(defaultValue - variance, defaultValue + variance + 1);
 }
 
+uint8_t getSum(uint8_t values[], uint8_t size) {
+  int sum = 0;
+
+  for (uint8_t i = 0; i < size; i++) {
+    sum += values[i];
+  }
+
+  return sum;
+}
+
+String getPrettyAverage(uint32_t total, int size) {
+  char response[4];
+  dtostrf(float(total) / size, -4, 1, response);
+  return response;
+}
+
+uint16_t getMaxValue(uint16_t values[], uint8_t size) {
+  int maxValue = 0;
+
+  for (uint8_t i = 0; i < size; i++) {
+    maxValue = max(maxValue, values[i]);
+  }
+
+  return maxValue;
+}
+
 #endif

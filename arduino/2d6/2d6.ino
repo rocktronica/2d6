@@ -167,7 +167,7 @@ uint8_t getDialogIndexWithSideEffects(
 }
 
 void handleDialogNavigationEvents(Dialog* dialog) {
-  if (*dialog == Dialog::Operation) {
+  if (*dialog == Dialog::Operation && operation.rollsCount > 0) {
     return;
   }
 
@@ -284,6 +284,7 @@ void loop() {
       );
     }
   } else if (display.dialog == Dialog::SetDicePerRoll) {
+    // TODO: uhhhh, does 9 crash?
     const uint8_t options[8] = { 1, 2, 3, 4, 5, 6, 9, MAX_DICE_PER_ROLL };
 
     drawDialog(

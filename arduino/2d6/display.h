@@ -4,20 +4,19 @@
 #include "utils.h"
 
 # define SIDEBAR_WIDTH      45
-# define GRAPH_WIDTH        (WIDTH - SIDEBAR_WIDTH - FRAME_GAP)
+# define GRAPH_WIDTH        (WIDTH - SIDEBAR_WIDTH - GAP)
 
 # define OUTER_FILLET       3
 # define INNER_FILLET       1
 
 # define FRAME              1
-# define FRAME_GAP          2
 # define GAP                1
 # define DIALOG_GAP         3
 
 # define DIE_SIZE           13
 # define DIE_CHAR_WIDTH     5    // Default Arduboy font
 # define DIE_CHAR_HEIGHT    7    // Default Arduboy font
-# define DIE_CHAR_SMALL     4    // TinyFont 4x4
+# define TINY_TEXT_SIZE     4    // TinyFont 4x4
 
 # define FRAMES_PER_SECOND  30
 # define ROLL_FRAMES        6
@@ -27,7 +26,7 @@
 # define TITLE_ROLL_2_FRAME 12
 # define DECONSTRUCT_FRAMES 15
 
-// TODO: extract stuff to utils
+const char ROLL_CHARS[] = {'!','@','#','$','%','^','&','*'};
 
 enum Dialog {
   Title,
@@ -43,32 +42,6 @@ enum Direction {
   Down
 };
 
-uint8_t getSum(uint8_t values[], uint8_t size) {
-  int sum = 0;
-
-  for (uint8_t i = 0; i < size; i++) {
-    sum += values[i];
-  }
-
-  return sum;
-}
-
-String getPrettyAverage(uint32_t total, int size) {
-  char response[4];
-  dtostrf(float(total) / size, -4, 1, response);
-  return response;
-}
-
-uint16_t getMaxValue(uint16_t values[], uint8_t size) {
-  int maxValue = 0;
-
-  for (uint8_t i = 0; i < size; i++) {
-    maxValue = max(maxValue, values[i]);
-  }
-
-  return maxValue;
-}
-
 Xy getPanelTextXy(
   uint8_t panelWidth,
   uint8_t panelHeight,
@@ -77,8 +50,8 @@ Xy getPanelTextXy(
   return {
     x: (WIDTH - panelWidth) / 2 + (FRAME + DIALOG_GAP),
     y: (HEIGHT - panelHeight) / 2 + FRAME * 2 + GAP * 2
-      + DIE_CHAR_SMALL + DIALOG_GAP
-      + (DIE_CHAR_SMALL + GAP) * lineIndex
+      + TINY_TEXT_SIZE + DIALOG_GAP
+      + (TINY_TEXT_SIZE + GAP) * lineIndex
   };
 }
 
@@ -104,22 +77,47 @@ void drawPanel(
   );
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
-  arduboy.drawFastHLine(x, y + DIE_CHAR_SMALL + FRAME + GAP + GAP, width);
+  arduboy.drawFastHLine(x, y + TINY_TEXT_SIZE + FRAME + GAP + GAP, width);
 
   tinyfont.setCursor(
-    (WIDTH - (DIE_CHAR_SMALL * title.length() + (title.length() - 1))) / 2,
+    (WIDTH - (TINY_TEXT_SIZE * title.length() + (title.length() - 1))) / 2,
     y + (FRAME + GAP)
   );
   tinyfont.print(title);
+}
+
+uint8_t getMinPanelWidth(uint8_t chars) {
+  return (FRAME + DIALOG_GAP) * 2
+      + chars * TINY_TEXT_SIZE + (chars - 1) * GAP;
+}
+
+uint8_t getMinPanelHeight(uint8_t linesCount) {
+  return (FRAME + GAP) * 2 + TINY_TEXT_SIZE
+    + DIALOG_GAP * 2 + FRAME
+    + TINY_TEXT_SIZE * linesCount
+    + GAP * (linesCount - 1);
+}
+
+uint8_t getMinDialogWidth(
+  String title,
+  String options[],
+  uint8_t optionsSize
+) {
+  uint8_t maxChars = title.length() + 2;
+
+  for (uint8_t i = 0; i < optionsSize; i++) {
+    maxChars = max(maxChars, options[i].length() + 2);
+  }
+
+  return getMinPanelWidth(maxChars);
 }
 
 void drawLimitErrorPanel(
   Arduboy2 arduboy,
   Tinyfont tinyfont
 ) {
-  // TODO: derive
-  uint8_t width = 43;
-  uint8_t height = 25;
+  uint8_t width = getMinPanelWidth(7);
+  uint8_t height = getMinPanelHeight(2);
 
   drawPanel(
     (WIDTH - width) / 2, (HEIGHT - height) / 2,
@@ -165,30 +163,6 @@ void drawDialog(
   }
 }
 
-uint8_t getMinDialogWidth(
-  String title,
-  String options[],
-  uint8_t optionsSize
-) {
-  uint8_t maxChars = title.length() + 2;
-
-  for (uint8_t i = 0; i < optionsSize; i++) {
-    maxChars = max(maxChars, options[i].length() + 2);
-  }
-
-  return (FRAME + DIALOG_GAP) * 2
-    + maxChars * DIE_CHAR_SMALL + (maxChars - 1) * GAP;
-}
-
-uint8_t getMinDialogHeight(
-  uint8_t optionsSize
-) {
-  return (FRAME + GAP) * 2 + DIE_CHAR_SMALL
-    + DIALOG_GAP * 2 + FRAME
-    + DIE_CHAR_SMALL * optionsSize
-    + GAP * (optionsSize - 1);
-}
-
 void drawDialog(
   String title,
 
@@ -201,13 +175,12 @@ void drawDialog(
 ) {
   drawDialog(
     getMinDialogWidth(title, options, optionsSize),
-    getMinDialogHeight(optionsSize),
+    getMinPanelHeight(optionsSize),
     title,
     options, optionsSize, selectedOptionIndex,
     arduboy, tinyfont
   );
 }
-
 
 void drawDialog(
   String title,
@@ -231,7 +204,6 @@ void drawDialog(
   );
 }
 
-// TODO: BIG version for tabletop play
 void drawDie(
   uint8_t x,
   uint8_t y,
@@ -253,8 +225,8 @@ void drawDie(
   if (useTinyFont) {
     tinyfont.setCursor(
       x + (float(size)
-        - (value.length() < 2 ? DIE_CHAR_SMALL : DIE_CHAR_SMALL * 2 + 1)) / 2,
-      y + (float(size) - DIE_CHAR_SMALL) / 2
+        - (value.length() < 2 ? TINY_TEXT_SIZE : TINY_TEXT_SIZE * 2 + 1)) / 2,
+      y + (float(size) - TINY_TEXT_SIZE) / 2
     );
     tinyfont.print(value);
   } else {
@@ -278,10 +250,6 @@ void drawDie(
     );
   }
 }
-
-const char ROLL_CHARS[] = {
-  '!','@','#','$','%','^','&','*'
-};
 
 void drawRollingDie(
   int8_t x,
@@ -310,19 +278,32 @@ void drawRollingDie(
     arduboy
   );
 
-  // TODO: move cursor around 2x2
   tinyfont.setCursor(
-    x + (hypotenuse - DIE_CHAR_SMALL) / 2 + 1,
-    y + (hypotenuse - DIE_CHAR_SMALL) / 2 + 1
+    x + (hypotenuse - TINY_TEXT_SIZE) / 2 + 1,
+    y + (hypotenuse - TINY_TEXT_SIZE) / 2 + 1
   );
   tinyfont.print(ROLL_CHARS[random(0, sizeof(ROLL_CHARS) + 1)]);
+}
+
+void drawCenteredText(
+  String text,
+  uint8_t size,
+  uint8_t y,
+  uint8_t lineIndex,
+  Tinyfont tinyfont
+) {
+  tinyfont.setCursor(
+    (WIDTH - (TINY_TEXT_SIZE * size + (size - 1))) / 2,
+    y + (TINY_TEXT_SIZE + 1) * lineIndex
+  );
+  tinyfont.print(text);
 }
 
 void drawTitle(
   uint8_t dicePerRoll,
   uint8_t sidesPerDie,
 
-  int8_t dieIndex, // TODO: obviate
+  int8_t dieIndex,
   int8_t framesRemaining[],
   bool rollClockwise[],
 
@@ -357,27 +338,11 @@ void drawTitle(
     }
   }
 
-  // TODO: tidy
-  tinyfont.setCursor(
-    (WIDTH - (DIE_CHAR_SMALL * 9 + (9 - 1))) / 2,
-    36
-  );
-  tinyfont.print("DICE ROLL");
-
-  tinyfont.setCursor(
-    (WIDTH - (DIE_CHAR_SMALL * 12 + (12 - 1))) / 2,
-    36 + (DIE_CHAR_SMALL + 1) * 1
-  );
-  tinyfont.print("DISTRIBUTION");
-
-  tinyfont.setCursor(
-    (WIDTH - (DIE_CHAR_SMALL * 10 + (10 - 1))) / 2,
-    36 + (DIE_CHAR_SMALL + 1) * 2
-  );
-  tinyfont.print("VISUALIZER");
+  drawCenteredText("DICE ROLL", 9, 36, 0, tinyfont);
+  drawCenteredText("DISTRIBUTION", 12, 36, 1, tinyfont);
+  drawCenteredText("VISUALIZER", 10, 36, 2, tinyfont);
 }
 
-// TODO: title
 void drawSidebar(
   uint8_t x,
   uint8_t y,
@@ -399,19 +364,19 @@ void drawSidebar(
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
   const uint8_t diceColumns =
-    floor((width - (FRAME_GAP + FRAME) * 2) / DIE_SIZE);
+    floor((width - (GAP + FRAME) * 2) / DIE_SIZE);
   const uint8_t diceRows = ceil(float(valuesCount) / diceColumns);
 
   const uint8_t xOffset = (
-    (width - (FRAME_GAP + FRAME) * 2)
+    (width - (GAP + FRAME) * 2)
       - DIE_SIZE * min(valuesCount, diceColumns)
       - GAP * (diceColumns - 1)
     ) / 2;
 
   for (uint8_t i = 0; i < valuesCount; i++) {
-    uint8_t diceX = x + FRAME + FRAME_GAP
+    uint8_t diceX = x + FRAME + GAP
       + xOffset + (i % diceColumns) * (DIE_SIZE + GAP);
-    uint8_t diceY = y + FRAME + FRAME_GAP
+    uint8_t diceY = y + FRAME + GAP
       + floor(i / diceColumns) * (DIE_SIZE + GAP);
 
     if (framesRemaining[i] > 0) {
@@ -431,18 +396,17 @@ void drawSidebar(
     }
   }
 
-  const uint8_t lineY = y + FRAME + FRAME_GAP
+  const uint8_t lineY = y + FRAME + GAP
       + DIE_SIZE * diceRows + GAP * (diceRows - 1)
-      + FRAME_GAP;
+      + GAP;
 
-  // TinyFont breaks if asked to render off-screen
-  // TODO: design away hack
-  if (lineY <= HEIGHT - 10) {
+  // Only render text if there's room for at least one line
+  if (lineY <= HEIGHT - TINY_TEXT_SIZE - GAP * 2 - FRAME) {
     arduboy.drawFastHLine(x, lineY, width);
 
     tinyfont.setCursor(
-      x + FRAME + FRAME_GAP,
-      lineY + FRAME + FRAME_GAP
+      x + FRAME + GAP,
+      lineY + FRAME + GAP
     );
     tinyfont.print(text);
   }
@@ -452,7 +416,7 @@ uint8_t getIdealGraphBarWidth(
   uint8_t maxWidth,
   uint8_t barsCount
 ) {
-  return (maxWidth - (FRAME_GAP + FRAME) * 2 - GAP * (barsCount - 1)) / barsCount;
+  return (maxWidth - (GAP + FRAME) * 2 - GAP * (barsCount - 1)) / barsCount;
 }
 
 uint8_t getIdealGraphWidth(
@@ -460,7 +424,7 @@ uint8_t getIdealGraphWidth(
   uint8_t barsCount
 ) {
   return getIdealGraphBarWidth(maxWidth, barsCount) * barsCount
-    + (FRAME_GAP + FRAME) * 2 + GAP * (barsCount - 1);
+    + (GAP + FRAME) * 2 + GAP * (barsCount - 1);
 }
 
 // TODO: fix for 6d20/etc
@@ -486,24 +450,24 @@ void drawGraph(
   const uint8_t xOffset = (width - getIdealGraphWidth(width, barsCount)) / 2;
 
   for (uint8_t i = 0; i < barsCount; i++) {
-    uint8_t barHeight = (float(sumCounts[i]) / maxCount) * (height - (FRAME_GAP + FRAME) * 2);
+    uint8_t barHeight = (float(sumCounts[i]) / maxCount) * (height - (GAP + FRAME) * 2);
 
     if (barHeight > 0) {
       arduboy.fillRect(
-        x + xOffset + (FRAME_GAP + FRAME) + i * (barWidth + GAP),
-        y + height - barHeight - (FRAME_GAP + FRAME),
+        x + xOffset + (GAP + FRAME) + i * (barWidth + GAP),
+        y + height - barHeight - (GAP + FRAME),
         max(1, barWidth),
         barHeight
       );
     }
   }
 
-  if (maxCount <= (height - (FRAME_GAP + FRAME) * 2) / 2) {
+  if (maxCount <= (height - (GAP + FRAME) * 2) / 2) {
     for (uint8_t i = 1; i < maxCount; i++) {
       arduboy.drawFastHLine(
-        x + (FRAME_GAP + FRAME),
-        y + (FRAME_GAP + FRAME) + (height - (FRAME_GAP + FRAME) * 2) * (float(i) / maxCount),
-        width - (FRAME_GAP + FRAME) * 2,
+        x + (GAP + FRAME),
+        y + (GAP + FRAME) + (height - (GAP + FRAME) * 2) * (float(i) / maxCount),
+        width - (GAP + FRAME) * 2,
         BLACK
       );
     }
