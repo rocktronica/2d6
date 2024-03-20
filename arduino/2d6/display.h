@@ -271,10 +271,9 @@ void drawRollingDie(
   x = x - 1 - (hypotenuse - size) / 2;
   y = y - 1 - (hypotenuse - size) / 2;
 
-  drawRotatedSquare(
+  drawEquilateralPolygon(
     x, y,
-    hypotenuse,
-    degrees,
+    hypotenuse, degrees, 4,
     arduboy
   );
 

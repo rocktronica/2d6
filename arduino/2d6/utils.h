@@ -45,35 +45,42 @@ void drawPolygon(Xy points[], uint8_t size, Arduboy2 arduboy) {
 
 float getRadians(int16_t degrees) { return (float(degrees) * 71) / 4068; }
 
-void drawRotatedSquare(
+Xy getEquilateralPolygonCorner(
   int16_t x,
   int16_t y,
 
   uint8_t size,
 
-  int16_t degrees,
-
-  Arduboy2 arduboy
+  int16_t degrees
 ) {
   float angleInRadians = getRadians(degrees);
-  float otherAngleInRadians = -getRadians(90 - degrees);
-
   uint8_t radius = size / 2;
-  Xy center = {radius, radius };
-
+  Xy center = {radius, radius};
   int8_t adjacent = radius * cos(angleInRadians);
   int8_t opposite = radius * sin(angleInRadians);
 
-  int8_t offAdjacent = radius * cos(otherAngleInRadians);
-  int8_t offOpposite = radius * sin(otherAngleInRadians);
-
-  Xy points[4] = {
-    {x + center.x + adjacent, y + center.y + opposite},
-    {x + center.x + offAdjacent, y + center.y + offOpposite},
-    {x + center.x - adjacent, y + center.y - opposite},
-    {x + center.x - offAdjacent, y + center.y - offOpposite},
+  return {
+    x + center.x + adjacent,
+    y + center.y + opposite
   };
-  drawPolygon(points, 4, arduboy);
+}
+
+void drawEquilateralPolygon(
+  int16_t x,
+  int16_t y,
+
+  uint8_t size,
+  int16_t degrees,
+  uint32_t corners,
+
+  Arduboy2 arduboy
+) {
+  Xy points[corners];
+  for (int i = 0; i < corners; i++) {
+    points[i] = getEquilateralPolygonCorner(x, y, size, degrees + i * (360 / corners));
+  }
+
+  drawPolygon(points, corners, arduboy);
 }
 
 int8_t getIndexOfValue(
