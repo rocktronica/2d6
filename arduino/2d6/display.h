@@ -215,9 +215,7 @@ void drawDie(
 
   uint8_t size = DIE_SIZE,
   bool useTinyFont = false,
-  uint8_t fillet = INNER_FILLET,
-
-  bool accent = false
+  uint8_t fillet = INNER_FILLET
 ) {
   uint8_t textWidth = value.length() * DIE_CHAR_WIDTH
     + (value.length() - 1);
@@ -239,16 +237,6 @@ void drawDie(
 
   // Intentionally draw container after text to ensure visibility
   arduboy.drawRoundRect(x, y, size, size, fillet);
-
-  if (accent) {
-    arduboy.drawRoundRect(
-      x + FRAME,
-      y + FRAME,
-      size - FRAME * 2,
-      size - FRAME * 2,
-      max(0, fillet - FRAME)
-    );
-  }
 }
 
 void drawRollingDie(
