@@ -327,7 +327,7 @@ void drawTitle(
   Arduboy2 arduboy,
   Tinyfont tinyfont
 ) {
-  uint8_t dieSize = DIE_CHAR_WIDTH * 2 + 8; // a little arbitrary
+  uint8_t dieSize = 19; // eyeballed!
 
   const uint8_t xOffset = (WIDTH - (dieSize * 3 + GAP * 2)) / 2;
   const uint8_t y = 15;
