@@ -373,6 +373,7 @@ void loop() {
         operation.sumCounts,
         getUniqueSumsCount(),
         getMinSum(),
+        getMaxSum(),
         operation.rollsCount,
         operation.totalSum,
         arduboy, tinyfont

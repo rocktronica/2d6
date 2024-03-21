@@ -31,7 +31,7 @@
 # define GRAPH_PANEL_Y      0
 # define DEBUG_PANEL_Y      -(HEIGHT + GAP)
 
-# define DEBUG_MAX_ROWS     7
+# define DEBUG_MAX_ROWS     6
 
 const char ROLL_CHARS[] = {'!','@','#','$','%','^','&','*'};
 
@@ -504,6 +504,7 @@ void drawDebugPanel(
   uint16_t sumCounts[],
   uint8_t sumsCount,
   uint8_t minSum,
+  uint8_t maxSum,
   uint16_t rollsCount,
   uint32_t totalSum,
 
@@ -519,10 +520,9 @@ void drawDebugPanel(
   int8_t startingIndex = max(0, (sumsCount - (DEBUG_MAX_ROWS * 2)) / 2);
 
   tinyfont.setCursor(xy.x, xy.y);
-  tinyfont.print(
-    "AVERAGE: " + getPrettyAverage(totalSum, rollsCount) + "\n" +
-    "ROLLS:   " + String(rollsCount)
-  );
+  tinyfont.print( "AVERAGE:" + getPrettyAverage(totalSum, rollsCount) + "\n");
+  tinyfont.print("ROLLS:  " + String(rollsCount) + "\n");
+  tinyfont.print("MIN:" + String(minSum) + " MAX:" + String(maxSum));
 
   for (
     uint8_t i = startingIndex;
@@ -534,7 +534,7 @@ void drawDebugPanel(
     // TODO: down, then over
     tinyfont.setCursor(
       xy.x + ((i - startingIndex) % 2) * (width - (xy.x - x) * 2) / 2,
-      xy.y + (TINY_TEXT_SIZE + GAP) * (floor((i - startingIndex) / 2) + 2.5)
+      xy.y + (TINY_TEXT_SIZE + GAP) * (floor((i - startingIndex) / 2) + 3.5)
     );
 
     tinyfont.print(
