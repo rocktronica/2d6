@@ -109,9 +109,14 @@ void resetOperation() {
 
   operation.rollsCount = 0;
   operation.totalSum = 0;
+
+  display.deconstructFramesRemaining = 0;
 }
 
 void deconstructOperation() {
+  for (uint8_t i = 0; i < settings.dicePerRoll; i++) {
+    operation.currentRollValues[i] = 0;
+  }
   for (uint8_t i = 0; i < getUniqueSumsCount(); i++) {
     operation.sumCounts[i] = float(operation.sumCounts[i]) * .8;
   }
@@ -192,10 +197,12 @@ void handleOperationEvents() {
     display.deconstructFramesRemaining =
       max(0, display.deconstructFramesRemaining - 1);
 
-    if (display.deconstructFramesRemaining == 0) {
+    if (
+      display.deconstructFramesRemaining == 0 ||
+      arduboy.pressed(B_BUTTON)
+    ) {
       resetOperation();
     }
-    return;
   }
 
   if (arduboy.justPressed(B_BUTTON)) {
