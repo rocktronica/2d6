@@ -414,7 +414,6 @@ uint8_t getIdealGraphWidth(
     + (GAP + FRAME) * 2 + GAP * (barsCount - 1);
 }
 
-// TODO: fix for 6d20/etc
 void drawGraph(
   uint8_t x,
   uint8_t y,
@@ -431,19 +430,23 @@ void drawGraph(
 ) {
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
-  uint8_t barWidth = getIdealGraphBarWidth(width, barsCount);
+  uint8_t idealBarWidth = getIdealGraphBarWidth(width, barsCount);
   uint16_t maxCount = getMaxValue(sumCounts, barsCount);
 
-  const uint8_t xOffset = (width - getIdealGraphWidth(width, barsCount)) / 2;
+  uint8_t xOffset = max(0, (width - getIdealGraphWidth(width, barsCount)) / 2)
+    + (GAP + FRAME);
+  float plotWidth = idealBarWidth == 0
+    ? float(width) / barsCount
+    : (idealBarWidth + GAP);
 
   for (uint8_t i = 0; i < barsCount; i++) {
     uint8_t barHeight = (float(sumCounts[i]) / maxCount) * (height - (GAP + FRAME) * 2);
 
     if (barHeight > 0) {
       arduboy.fillRect(
-        x + xOffset + (GAP + FRAME) + i * (barWidth + GAP),
+        x + xOffset + i * plotWidth,
         y + height - barHeight - (GAP + FRAME),
-        max(1, barWidth),
+        max(1, idealBarWidth),
         barHeight
       );
     }
