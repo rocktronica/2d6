@@ -32,10 +32,12 @@
 # define DEBUG_PANEL_Y      -(HEIGHT + GAP)
 
 # define DEBUG_MAX_ROWS     6
+# define DEBUG_COLS         2
 
 const char ROLL_CHARS[] = {'!','@','#','$','%','^','&','*'};
 
 enum Stage {
+  // TODO: Credits,
   Title,
   SetSound,
   SetDicePerRoll,
@@ -516,31 +518,38 @@ void drawDebugPanel(
 ) {
   drawPanel(x, y, width, height, "DEBUG", arduboy, tinyfont);
 
-  Xy xy = getPanelTextXy(x, y, width, height, 0);
-  int8_t startingIndex = max(0, (sumsCount - (DEBUG_MAX_ROWS * 2)) / 2);
+  Xy bodyXy = getPanelTextXy(x, y, width, height, 0);
+  int8_t startingIndex = max(0, (sumsCount - (DEBUG_MAX_ROWS * 3)) / 2);
 
-  tinyfont.setCursor(xy.x, xy.y);
+  tinyfont.setCursor(bodyXy.x, bodyXy.y);
   tinyfont.print( "AVERAGE:" + getPrettyAverage(totalSum, rollsCount) + "\n");
   tinyfont.print("ROLLS:  " + String(rollsCount) + "\n");
-  tinyfont.print("MIN:" + String(minSum) + " MAX:" + String(maxSum));
+  tinyfont.print("MIN:" + String(minSum) + "  MAX:" + String(maxSum));
 
   for (
     uint8_t i = startingIndex;
-    i < min(sumsCount, startingIndex + DEBUG_MAX_ROWS * 2);
+    i < min(sumsCount, startingIndex + DEBUG_MAX_ROWS * DEBUG_COLS);
     i++
   ) {
     uint8_t likelihood = (float(sumCounts[i]) / rollsCount * 100);
 
-    // TODO: down, then over
-    tinyfont.setCursor(
-      xy.x + ((i - startingIndex) % 2) * (width - (xy.x - x) * 2) / 2,
-      xy.y + (TINY_TEXT_SIZE + GAP) * (floor((i - startingIndex) / 2) + 3.5)
-    );
+    Xy xy = {
+      bodyXy.x + ((i - startingIndex) / (DEBUG_MAX_ROWS))
+        * ((width - (bodyXy.x - x) * 2) / DEBUG_COLS),
+      bodyXy.y + (((i - startingIndex) % DEBUG_MAX_ROWS) + 3.5) * (TINY_TEXT_SIZE + GAP)
+    };
 
-    tinyfont.print(
-      ((i + minSum < 10) ? " " : "") + String(i + minSum) + ":"
-      + String(likelihood) + "%"
-    );
+    tinyfont.setCursor(xy.x, xy.y);
+    tinyfont.print(((i + minSum < 10) ? " " : ""));
+    tinyfont.print(((i + minSum < 100) ? " " : ""));
+    tinyfont.print(String(i + minSum));
+
+    // Squeezing pixels around : for max real estate
+    tinyfont.setCursor(xy.x + (TINY_TEXT_SIZE + GAP) * 3 - 1, xy.y);
+    tinyfont.print(":");
+    tinyfont.setCursor(xy.x + (TINY_TEXT_SIZE + GAP) * 3 + 2, xy.y);
+    tinyfont.print(String(likelihood));
+    tinyfont.print("%");
   }
 }
 
