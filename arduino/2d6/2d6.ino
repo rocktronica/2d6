@@ -253,6 +253,12 @@ void handleOperationEvents() {
     display.scrollDirection = None;
     display.scroll = 0;
   }
+
+  if (arduboy.justPressed(UP_BUTTON)) {
+    display.scroll += 1;
+  } else if (arduboy.justPressed(DOWN_BUTTON)) {
+    display.scroll -= 1;
+  }
 }
 
 void handleTitleDieIncrementing(uint8_t targetFrame, uint8_t index) {
