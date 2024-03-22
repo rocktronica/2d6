@@ -37,7 +37,7 @@
 const char ROLL_CHARS[] = {'!','@','#','$','%','^','&','*'};
 
 enum Stage {
-  // TODO: Credits,
+  Credits,
   Title,
   SetSound,
   SetDicePerRoll,
@@ -316,6 +316,16 @@ void drawCenteredText(
     y + (TINY_TEXT_SIZE + 1) * lineIndex
   );
   tinyfont.print(text);
+}
+
+void drawCredits(
+  Arduboy2 arduboy,
+  Tinyfont tinyfont
+) {
+  drawCenteredText("MADE BY", 7, 18, 0, tinyfont);
+  drawCenteredText("@ROCKTRONICA", 12, 18, 1, tinyfont);
+  drawCenteredText("who knows why", 13, 18, 3, tinyfont);
+  drawCenteredText("2024", 4, 18, 5, tinyfont);
 }
 
 void drawTitle(

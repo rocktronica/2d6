@@ -284,7 +284,9 @@ void loop() {
     display.rollFramesRemaining[i] = max(0, display.rollFramesRemaining[i] - 1);
   }
 
-  if (display.stage == Stage::Title) {
+  if (display.stage == Stage::Credits) {
+    drawCredits(arduboy, tinyfont);
+  } else if (display.stage == Stage::Title) {
     drawTitle(
       settings.dicePerRoll,
       settings.sidesPerDie,
