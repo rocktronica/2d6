@@ -34,6 +34,8 @@
 # define DEBUG_MAX_ROWS     6
 # define DEBUG_COLS         2
 
+# define CARET_SIZE         2
+
 const char ROLL_CHARS[] = {'!','@','#','$','%','^','&','*'};
 
 enum Stage {
@@ -80,6 +82,25 @@ Xy getPanelTextXy(
   );
 }
 
+void drawCaret(
+  int8_t x,
+  int8_t y,
+
+  Direction direction,
+
+  Arduboy2 arduboy
+) {
+  if (direction == Direction::Up) {
+    y += CARET_SIZE / 2;
+  }
+
+  arduboy.fillTriangle(
+    x, y,
+    x + CARET_SIZE, y,
+    x + CARET_SIZE / 2, y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
+  );
+}
+
 void drawPanel(
   int8_t x,
   int8_t y,
@@ -92,7 +113,8 @@ void drawPanel(
   Arduboy2 arduboy,
   Tinyfont tinyfont,
 
-  bool shadow = false
+  bool shadow = false,
+  Direction arrow = Direction::None
 ) {
   if (shadow) {
     arduboy.fillRoundRect(
@@ -108,12 +130,20 @@ void drawPanel(
   arduboy.drawRoundRect(x, y, width, height, OUTER_FILLET);
 
   arduboy.drawFastHLine(x, y + TINY_TEXT_SIZE + FRAME + GAP + GAP, width);
-
   tinyfont.setCursor(
     x + (width - (TINY_TEXT_SIZE * title.length() + (title.length() - 1))) / 2,
     y + (FRAME + GAP)
   );
   tinyfont.print(title);
+
+  if (arrow != Direction::None) {
+    drawCaret(
+      x + width - CARET_SIZE - 5,   // eyeballed!
+      y + 3,                        // eyeballed!
+      arrow,
+      arduboy
+    );
+  }
 }
 
 uint8_t getMinPanelWidth(uint8_t chars) {
@@ -482,7 +512,13 @@ void drawGraphPanel(
   uint8_t width = GRAPH_WIDTH,
   uint8_t height = HEIGHT
 ) {
-  drawPanel(x, y, width, height, "DISTRIBUTION", arduboy, tinyfont);
+  drawPanel(
+    x, y,
+    width, height,
+    "DISTRIBUTION",
+    arduboy, tinyfont,
+    false, Direction::Down
+  );
 
   uint8_t idealBarWidth = getIdealGraphBarWidth(width, sumsCount);
   uint16_t maxCount = getMaxValue(sumCounts, sumsCount);
@@ -526,7 +562,13 @@ void drawDebugPanel(
   uint8_t width = GRAPH_WIDTH,
   uint8_t height = HEIGHT
 ) {
-  drawPanel(x, y, width, height, "DEBUG", arduboy, tinyfont);
+  drawPanel(
+    x, y,
+    width, height,
+    "DEBUG",
+    arduboy, tinyfont,
+    false, Direction::Up
+  );
 
   Xy bodyXy = getPanelTextXy(x, y, width, height, 0);
   int8_t startingIndex = max(0, (sumsCount - (DEBUG_MAX_ROWS * 3)) / 2);
