@@ -83,21 +83,29 @@ Xy getPanelTextXy(
 }
 
 void drawCaret(
-  int8_t x,
-  int8_t y,
+  int8_t panelX,
+  int8_t panelY,
+
+  uint8_t panelWidth,
 
   Direction direction,
 
   Arduboy2 arduboy
 ) {
-  if (direction == Direction::Up) {
-    y += CARET_SIZE / 2;
-  }
-
+  // Eyeballed!
   arduboy.fillTriangle(
-    x, y,
-    x + CARET_SIZE, y,
-    x + CARET_SIZE / 2, y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
+    panelX + panelWidth - CARET_SIZE - 5,
+    panelY + 3
+      + (direction == Direction::Up ? CARET_SIZE / 2 : 0),
+
+    panelX + panelWidth - CARET_SIZE - 5 + CARET_SIZE,
+    panelY + 3
+      + (direction == Direction::Up ? CARET_SIZE / 2 : 0),
+
+    panelX + panelWidth - CARET_SIZE - 5 + CARET_SIZE / 2,
+    panelY + 3
+      + (direction == Direction::Up ? CARET_SIZE / 2 : 0)
+      + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
   );
 }
 
@@ -113,8 +121,7 @@ void drawPanel(
   Arduboy2 arduboy,
   Tinyfont tinyfont,
 
-  bool shadow = false,
-  Direction arrow = Direction::None
+  bool shadow = false
 ) {
   if (shadow) {
     arduboy.fillRoundRect(
@@ -135,15 +142,6 @@ void drawPanel(
     y + (FRAME + GAP)
   );
   tinyfont.print(title);
-
-  if (arrow != Direction::None) {
-    drawCaret(
-      x + width - CARET_SIZE - 5,   // eyeballed!
-      y + 3,                        // eyeballed!
-      arrow,
-      arduboy
-    );
-  }
 }
 
 uint8_t getMinPanelWidth(uint8_t chars) {
@@ -499,6 +497,7 @@ uint8_t getIdealGraphWidth(
     + (GAP + FRAME) * 2 + GAP * (barsCount - 1);
 }
 
+// TODO: ~9d6 off center?
 void drawGraphPanel(
   int8_t x,
   int8_t y,
@@ -512,13 +511,8 @@ void drawGraphPanel(
   uint8_t width = GRAPH_WIDTH,
   uint8_t height = HEIGHT
 ) {
-  drawPanel(
-    x, y,
-    width, height,
-    "DISTRIBUTION",
-    arduboy, tinyfont,
-    false, Direction::Down
-  );
+  drawPanel(x, y, width, height, "DISTRIBUTION", arduboy, tinyfont,false);
+  drawCaret(x, y, width, Direction::Down, arduboy);
 
   uint8_t idealBarWidth = getIdealGraphBarWidth(width, sumsCount);
   uint16_t maxCount = getMaxValue(sumCounts, sumsCount);
@@ -562,13 +556,8 @@ void drawDebugPanel(
   uint8_t width = GRAPH_WIDTH,
   uint8_t height = HEIGHT
 ) {
-  drawPanel(
-    x, y,
-    width, height,
-    "DEBUG",
-    arduboy, tinyfont,
-    false, Direction::Up
-  );
+  drawPanel(x, y, width, height, "DEBUG", arduboy, tinyfont, false);
+  drawCaret(x, y, width, Direction::Up, arduboy);
 
   Xy bodyXy = getPanelTextXy(x, y, width, height, 0);
   int8_t startingIndex = max(0, (sumsCount - (DEBUG_MAX_ROWS * 3)) / 2);
