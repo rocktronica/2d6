@@ -1,6 +1,7 @@
 #ifndef graph_h
 #define graph_h
 
+#include "FlashStringHelper.h"
 #include "utils.h"
 
 # define SIDEBAR_WIDTH      45
@@ -36,7 +37,71 @@
 
 # define CARET_SIZE         2
 
-const char ROLL_CHARS[] = {'!','@','#','$','%','^','&','*'};
+const char ROLL_CHAR0[] PROGMEM = "!";
+const char ROLL_CHAR1[] PROGMEM = "@";
+const char ROLL_CHAR2[] PROGMEM = "#";
+const char ROLL_CHAR3[] PROGMEM = "$";
+const char ROLL_CHAR4[] PROGMEM = "%";
+const char ROLL_CHAR5[] PROGMEM = "^";
+const char ROLL_CHAR6[] PROGMEM = "&";
+const char ROLL_CHAR7[] PROGMEM = "*";
+
+const char * const ROLL_CHARS[] PROGMEM {
+  ROLL_CHAR0,
+  ROLL_CHAR1,
+  ROLL_CHAR2,
+  ROLL_CHAR3,
+  ROLL_CHAR4,
+  ROLL_CHAR5,
+  ROLL_CHAR6,
+  ROLL_CHAR7,
+};
+
+const char TITLE_STRING0[] PROGMEM = "DICE ROLL";
+const char TITLE_STRING1[] PROGMEM = "DISTRIBUTION";
+const char TITLE_STRING2[] PROGMEM = "VISUALIZER";
+
+const char * const TITLE_STRINGS[] PROGMEM {
+  TITLE_STRING0,
+  TITLE_STRING1,
+  TITLE_STRING2,
+};
+
+const char CREDITS_STRING0[] PROGMEM = "MADE BY";
+const char CREDITS_STRING1[] PROGMEM = "@ROCKTRONICA";
+const char CREDITS_STRING2[] PROGMEM = "who knows why";
+const char CREDITS_STRING3[] PROGMEM = "2024";
+
+const char * const CREDITS_STRINGS[] PROGMEM {
+  CREDITS_STRING0,
+  CREDITS_STRING1,
+  CREDITS_STRING2,
+  CREDITS_STRING3,
+};
+
+const char LIMIT_ERROR_STRING0[] PROGMEM = "ERROR";
+const char LIMIT_ERROR_STRING1[] PROGMEM = "LIMIT";
+const char LIMIT_ERROR_STRING2[] PROGMEM = "REACHED";
+
+const char * const LIMIT_ERROR_STRINGS[] PROGMEM {
+  LIMIT_ERROR_STRING0,
+  LIMIT_ERROR_STRING1,
+  LIMIT_ERROR_STRING2,
+};
+
+const char DEBUG_STRING0[] PROGMEM = "DEBUG";
+const char DEBUG_STRING1[] PROGMEM = "AVERAGE:";
+const char DEBUG_STRING2[] PROGMEM = "ROLLS:  ";
+const char DEBUG_STRING3[] PROGMEM = "MIN:";
+const char DEBUG_STRING4[] PROGMEM = "  MAX:";
+
+const char * const DEBUG_STRINGS[] PROGMEM {
+  DEBUG_STRING0,
+  DEBUG_STRING1,
+  DEBUG_STRING2,
+  DEBUG_STRING3,
+  DEBUG_STRING4,
+};
 
 enum Stage {
   Credits,
@@ -180,12 +245,15 @@ void drawLimitErrorPanel(
   drawPanel(
     (WIDTH - width) / 2, (HEIGHT - height) / 2,
     width, height,
-    "ERROR",
+    readFlashStringPointer(&LIMIT_ERROR_STRINGS[0]),
     arduboy, tinyfont,
     true
   );
 
-  String lines[] = { "LIMIT", "REACHED" };
+  String lines[] = {
+    readFlashStringPointer(&LIMIT_ERROR_STRINGS[1]),
+    readFlashStringPointer(&LIMIT_ERROR_STRINGS[2]),
+  };
   for (uint8_t i = 0; i < 2; i++) {
     Xy xy = getPanelTextXy(width, height, i);
     tinyfont.setCursor(xy.x, xy.y);
@@ -329,7 +397,9 @@ void drawRollingDie(
     x + (hypotenuse - TINY_TEXT_SIZE) / 2 + 1,
     y + (hypotenuse - TINY_TEXT_SIZE) / 2 + 1
   );
-  tinyfont.print(ROLL_CHARS[random(0, sizeof(ROLL_CHARS) + 1)]);
+  tinyfont.print(
+    readFlashStringPointer(&ROLL_CHARS[random(0, 7 + 1)])
+  );
 }
 
 void drawCenteredText(
@@ -350,10 +420,10 @@ void drawCredits(
   Arduboy2 arduboy,
   Tinyfont tinyfont
 ) {
-  drawCenteredText("MADE BY", 7, 18, 0, tinyfont);
-  drawCenteredText("@ROCKTRONICA", 12, 18, 1, tinyfont);
-  drawCenteredText("who knows why", 13, 18, 3, tinyfont);
-  drawCenteredText("2024", 4, 18, 5, tinyfont);
+  drawCenteredText(readFlashStringPointer(&CREDITS_STRINGS[0]), 7, 18, 0, tinyfont);
+  drawCenteredText(readFlashStringPointer(&CREDITS_STRINGS[1]), 12, 18, 1, tinyfont);
+  drawCenteredText(readFlashStringPointer(&CREDITS_STRINGS[2]), 13, 18, 3, tinyfont);
+  drawCenteredText(readFlashStringPointer(&CREDITS_STRINGS[3]), 4, 18, 5, tinyfont);
 }
 
 void drawTitle(
@@ -395,9 +465,9 @@ void drawTitle(
     }
   }
 
-  drawCenteredText("DICE ROLL", 9, 36, 0, tinyfont);
-  drawCenteredText("DISTRIBUTION", 12, 36, 1, tinyfont);
-  drawCenteredText("VISUALIZER", 10, 36, 2, tinyfont);
+  drawCenteredText(readFlashStringPointer(&TITLE_STRINGS[0]), 9, 36, 0, tinyfont);
+  drawCenteredText(readFlashStringPointer(&TITLE_STRINGS[1]), 12, 36, 1, tinyfont);
+  drawCenteredText(readFlashStringPointer(&TITLE_STRINGS[2]), 10, 36, 2, tinyfont);
 }
 
 uint8_t getDieSize(
@@ -511,7 +581,13 @@ void drawGraphPanel(
   uint8_t width = GRAPH_WIDTH,
   uint8_t height = HEIGHT
 ) {
-  drawPanel(x, y, width, height, "DISTRIBUTION", arduboy, tinyfont,false);
+  drawPanel(
+    x, y,
+    width, height,
+    readFlashStringPointer(&TITLE_STRINGS[1]),
+    arduboy, tinyfont,
+    false
+  );
   drawCaret(x, y, width, Direction::Down, arduboy);
 
   uint8_t idealBarWidth = getIdealGraphBarWidth(width, sumsCount);
@@ -556,16 +632,27 @@ void drawDebugPanel(
   uint8_t width = GRAPH_WIDTH,
   uint8_t height = HEIGHT
 ) {
-  drawPanel(x, y, width, height, "DEBUG", arduboy, tinyfont, false);
+  drawPanel(
+    x, y,
+    width, height,
+    readFlashStringPointer(&DEBUG_STRINGS[0]),
+    arduboy, tinyfont,
+    false
+  );
   drawCaret(x, y, width, Direction::Up, arduboy);
 
   Xy bodyXy = getPanelTextXy(x, y, width, height, 0);
   int8_t startingIndex = max(0, (sumsCount - (DEBUG_MAX_ROWS * 3)) / 2);
 
   tinyfont.setCursor(bodyXy.x, bodyXy.y);
-  tinyfont.print( "AVERAGE:" + getPrettyAverage(totalSum, rollsCount) + "\n");
-  tinyfont.print("ROLLS:  " + String(rollsCount) + "\n");
-  tinyfont.print("MIN:" + String(minSum) + "  MAX:" + String(maxSum));
+  tinyfont.print(readFlashStringPointer(&DEBUG_STRINGS[1]));
+  tinyfont.print(getPrettyAverage(totalSum, rollsCount) + "\n");
+  tinyfont.print(readFlashStringPointer(&DEBUG_STRINGS[2]));
+  tinyfont.print(String(rollsCount) + "\n");
+  tinyfont.print(readFlashStringPointer(&DEBUG_STRINGS[3]));
+  tinyfont.print(minSum);
+  tinyfont.print(readFlashStringPointer(&DEBUG_STRINGS[4]));
+  tinyfont.print(maxSum);
 
   for (
     uint8_t i = startingIndex;
