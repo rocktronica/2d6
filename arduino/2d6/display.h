@@ -148,29 +148,21 @@ Xy getPanelTextXy(
 }
 
 void drawCaret(
-  int8_t panelX,
-  int8_t panelY,
-
-  uint8_t panelWidth,
+  int8_t x,
+  int8_t y,
 
   Direction direction,
 
   Arduboy2 arduboy
 ) {
-  // Eyeballed!
+  if (direction == Direction::Up) {
+    y += CARET_SIZE / 2;
+  }
+
   arduboy.fillTriangle(
-    panelX + panelWidth - CARET_SIZE - 5,
-    panelY + 3
-      + (direction == Direction::Up ? CARET_SIZE / 2 : 0),
-
-    panelX + panelWidth - CARET_SIZE - 5 + CARET_SIZE,
-    panelY + 3
-      + (direction == Direction::Up ? CARET_SIZE / 2 : 0),
-
-    panelX + panelWidth - CARET_SIZE - 5 + CARET_SIZE / 2,
-    panelY + 3
-      + (direction == Direction::Up ? CARET_SIZE / 2 : 0)
-      + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
+    x, y,
+    x + CARET_SIZE, y,
+    x + CARET_SIZE / 2, y + CARET_SIZE / (direction == Direction::Up ? -2 : 2)
   );
 }
 
@@ -186,7 +178,8 @@ void drawPanel(
   Arduboy2 arduboy,
   Tinyfont tinyfont,
 
-  bool shadow = false
+  bool shadow = false,
+  Direction arrow = Direction::None
 ) {
   if (shadow) {
     arduboy.fillRoundRect(
@@ -207,6 +200,15 @@ void drawPanel(
     y + (FRAME + GAP)
   );
   tinyfont.print(title);
+
+  if (arrow != Direction::None) {
+    drawCaret(
+      x + width - CARET_SIZE - 5,   // eyeballed!
+      y + 3,                        // eyeballed!
+      arrow,
+      arduboy
+    );
+  }
 }
 
 uint8_t getMinPanelWidth(uint8_t chars) {
@@ -586,9 +588,8 @@ void drawGraphPanel(
     width, height,
     readFlashStringPointer(&TITLE_STRINGS[1]),
     arduboy, tinyfont,
-    false
+    false, Direction::Down
   );
-  drawCaret(x, y, width, Direction::Down, arduboy);
 
   uint8_t idealBarWidth = getIdealGraphBarWidth(width, sumsCount);
   uint16_t maxCount = getMaxValue(sumCounts, sumsCount);
@@ -637,9 +638,8 @@ void drawDebugPanel(
     width, height,
     readFlashStringPointer(&DEBUG_STRINGS[0]),
     arduboy, tinyfont,
-    false
+    false, Direction::Up
   );
-  drawCaret(x, y, width, Direction::Up, arduboy);
 
   Xy bodyXy = getPanelTextXy(x, y, width, height, 0);
   int8_t startingIndex = max(0, (sumsCount - (DEBUG_MAX_ROWS * 3)) / 2);
