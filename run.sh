@@ -6,15 +6,15 @@
 set -o errexit
 set -o errtrace
 
-stub="2d6"
-
 ardens="/Applications/Ardens/ArdensPlayer.app/Contents/MacOS/ArdensPlayer"
 
 fbqn="arduboy:avr:arduboy"
 port="/dev/cu.usbmodem143101"
 
-input_path="arduino/$stub"
-build_path="$PWD/build"
+stub=$(ls arduino | xargs)
+input_path="$PWD/arduino/${stub}/${stub}.ino"
+build_dir="$PWD/build"
+build_path="${build_dir}/${stub}.ino.hex"
 
 function help() {
     echo "\
@@ -41,22 +41,22 @@ if [ "$1" == '-h' ]; then
 fi
 
 function compile() {
-    mkdir -pv "$build_path" >/dev/null
+    mkdir -pv "${build_dir}" >/dev/null
 
     echo "COMPILING"
     echo
 
     arduino-cli compile \
-        --fqbn "$fbqn" \
-        --build-path="$build_path" \
+        --fqbn "${fbqn}" \
+        --build-path="${build_dir}" \
         --verbose \
-        "$input_path"
+        "${input_path}"
 
     echo
 }
 
 function emulate() {
-    $ardens file="$build_path/$stub.ino.hex" >/dev/null
+    $ardens file="${build_path}"
 }
 
 function upload() {
@@ -64,10 +64,10 @@ function upload() {
     echo
 
     arduino-cli upload \
-        --fqbn "$fbqn" \
-        --port "$port" \
+        --fqbn "${fbqn}" \
+        --port "${port}" \
         --verbose \
-        --input-file "$build_path/$stub.ino.hex"
+        --input-file "$build_dir/${input_path}.hex"
 
     echo
 }
@@ -87,19 +87,6 @@ if [ "$1" == 'emulate' ]; then
     exit
 fi
 
-if [ "$1" == 'dev' ]; then
-    while true; do
-        compile
-        emulate
-
-        echo
-        echo "!! Press CTRL+C to quit !!"
-        echo
-    done
-
-    exit
-fi
-
 if [ "$1" == 'deploy' ]; then
     if [ "$2" == '-p' ]; then
         port="$3"
@@ -111,6 +98,13 @@ if [ "$1" == 'deploy' ]; then
     exit
 fi
 
-help
+while true; do
+    compile
+    emulate
+
+    echo
+    echo "!! Press CTRL+C to quit !!"
+    echo
+done
 
 }
