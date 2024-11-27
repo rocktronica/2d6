@@ -67,7 +67,7 @@ function upload() {
         --fqbn "${fbqn}" \
         --port "${port}" \
         --verbose \
-        --input-file "$build_dir/${input_path}.hex"
+        --input-file "${build_path}"
 
     echo
 }
